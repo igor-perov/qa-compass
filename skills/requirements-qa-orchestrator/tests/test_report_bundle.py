@@ -31,6 +31,16 @@ class ReportBundleTests(unittest.TestCase):
             self.assertEqual(len(summary["defects"]), 1)
             self.assertEqual(summary["defects"][0]["test_case_id"], "TC-AUTH-ERR-001")
 
+            html = (Path(tmpdir) / "qa-report.html").read_text(encoding="utf-8")
+            self.assertIn("pie-chart", html)
+            self.assertIn("conic-gradient", html)
+            self.assertIn("Execution Overview", html)
+            self.assertIn("Confirmed Defects", html)
+            self.assertIn("Evidence Gallery", html)
+            self.assertIn("TC-AUTH-ERR-001", html)
+            self.assertIn("The flow accepted a public email domain and allowed progression.", html)
+            self.assertIn("evidence/public-email-failure.png", html)
+
 
 if __name__ == "__main__":
     unittest.main()

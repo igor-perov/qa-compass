@@ -24,6 +24,7 @@ def canonicalize_case(item: dict) -> dict:
     return {
         "test_case_id": item.get("test_case_id") or item.get("id") or "",
         "title": item.get("title") or item.get("name") or "Imported Test Case",
+        "feature": item.get("feature") or item.get("module") or item.get("suite") or "",
         "requirement_ids": force_list(item.get("requirement_ids") or item.get("requirements")),
         "priority": normalize_priority(item.get("priority")),
         "type": item.get("type") or item.get("category") or "Functional",

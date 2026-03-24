@@ -9,7 +9,7 @@ description: Use when requirements need to be turned into test cases, execution 
 
 This is the flagship requirements-to-QA workflow.
 
-It is prompt-first, but uses bundled scripts and canonical JSON artifacts to reduce token spend across intake, normalization, case generation, execution, and reporting.
+It is prompt-first, but uses bundled scripts and canonical JSON artifacts to reduce token spend across intake, normalization, case generation, optional reusable Playwright spec export, execution, and reporting.
 
 ## When to Use
 
@@ -26,14 +26,17 @@ It is prompt-first, but uses bundled scripts and canonical JSON artifacts to red
 2. Always confirm:
    - what the user wants to produce
    - what the source input is
-3. Ask only the next blocker question.
-4. If the source and requested outcome are already clear, start immediately.
+3. If generating cases from requirements, ask `full coverage or smoke only?` unless the request already answers it.
+4. If reusable automation artifacts would help, ask whether grouped Playwright `.spec.ts` starter files are wanted.
+5. Ask only the next blocker question.
+6. If the source and requested outcome are already clear, start immediately.
 
 ## Stage Model
 
 - `ingest`
 - `normalize`
 - `generate-cases`
+- `export-playwright-specs`
 - `execute`
 - `report`
 
@@ -49,7 +52,10 @@ Detailed rules live in:
 - When generating test cases, do not invent a new methodology.
 - Use the bundled `references/embedded-test-cases-skill.md` guidance as the quality baseline.
 - Use `scripts/prepare_test_case_brief.py` only to reduce token spend and shape inputs.
+- When requirements are the source for case generation, explicitly resolve `full coverage` versus `smoke only` before generating the suite.
+- Reusable Playwright `.spec.ts` files are optional starter artifacts and should be grouped by feature or module when exported.
 - Browser execution and PDF export must use `playwright-cli`.
+- Generated `.spec.ts` files do not replace `playwright-cli` for live execution inside this skill.
 - Prefer canonical JSON artifacts first, then render markdown and HTML from them.
 - Keep reusable scripts and templates in this skill folder; create project-local files only for outputs and run artifacts.
 
@@ -62,6 +68,7 @@ Detailed rules live in:
 - `scripts/import_test_cases_json.py`
 - `scripts/normalize_requirements.py`
 - `scripts/prepare_test_case_brief.py`
+- `scripts/export_playwright_specs.py`
 - `scripts/select_execution_subset.py`
 - `scripts/build_report_bundle.py`
 - `scripts/export_report_pdf.py`

@@ -9,6 +9,7 @@ from io_utils import read_json, render_template, write_json, write_text
 
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
+IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")
 
 
 def build_counts(results: list[dict]) -> dict:
@@ -26,6 +27,7 @@ def classify_defects(results: list[dict]) -> list[dict]:
     for result in results:
         if result.get("status") != "Failed":
             continue
+        evidence = result.get("evidence") or []
         defects.append(
             {
                 "defect_id": f"BUG-{defect_index:03d}",
@@ -34,7 +36,9 @@ def classify_defects(results: list[dict]) -> list[dict]:
                 "requirement_ids": result.get("requirement_ids", []),
                 "executed_steps": result.get("executed_steps", []),
                 "failure_details": result.get("failure_details", ""),
-                "evidence": result.get("evidence", []),
+                "notes": result.get("notes", []),
+                "evidence": evidence,
+                "primary_screenshot": first_image_reference(evidence),
             }
         )
         defect_index += 1
@@ -138,7 +142,7 @@ def render_case_section(item: dict) -> str:
         f"- Type: {item.get('type', 'Unknown')}",
         "- Steps executed:",
     ]
-    lines.extend([f"  1. {step}" if index == 0 else f"  {index + 1}. {step}" for index, step in enumerate(item.get("executed_steps", []))])
+    lines.extend([f"  {index + 1}. {step}" for index, step in enumerate(item.get("executed_steps", []))])
     if item.get("notes"):
         lines.append("- Notes:")
         lines.extend([f"  - {note}" for note in item["notes"]])
@@ -167,7 +171,9 @@ def render_html_report(report_input: dict) -> str:
             "passed_count": counts["passed"],
             "failed_count": counts["failed"],
             "blocked_count": counts["blocked"],
-            "chart_markup": render_chart_markup(counts),
+            "defect_count": len(report_input["defects"]),
+            "blocked_case_count": len(report_input["blocked_cases"]),
+            "pie_chart_style": build_pie_chart_style(counts),
             "results_rows": render_results_rows(report_input["results"]),
             "blocked_cases_section": render_blocked_section(report_input["blocked_cases"]),
             "defect_section": render_defect_section(report_input["defects"]),
@@ -183,6 +189,7 @@ def render_results_rows(results: list[dict]) -> str:
             "<tr>"
             f"<td>{escape(item.get('test_case_id', ''))}</td>"
             f"<td>{escape(item.get('title', ''))}</td>"
+            f"<td>{escape(item.get('priority', 'Medium'))}</td>"
             f"<td>{escape(item.get('duration', '-'))}</td>"
             f"<td><span class=\"status {escape(item.get('status', 'Unknown'))}\">{escape(item.get('status', 'Unknown'))}</span></td>"
             "</tr>"
@@ -193,13 +200,21 @@ def render_results_rows(results: list[dict]) -> str:
 def render_blocked_section(blocked_cases: list[dict]) -> str:
     if not blocked_cases:
         return '<div class="empty-state">No blocked cases in this run.</div>'
+
     cards = []
     for item in blocked_cases:
         cards.append(
-            "<div class=\"issue-card blocked\">"
-            f"<h4>{escape(item.get('test_case_id', ''))}: {escape(item.get('title', ''))}</h4>"
-            f"<p>{escape(item.get('blocker_details', 'Blocked without additional details.'))}</p>"
+            "<article class=\"issue-card blocked\">"
+            f"<div class=\"issue-head\"><h3>{escape(item.get('test_case_id', ''))}</h3><span class=\"status Blocked\">Blocked</span></div>"
+            f"<h4>{escape(item.get('title', ''))}</h4>"
+            f"<p class=\"issue-summary\">{escape(item.get('blocker_details', 'Blocked without additional details.'))}</p>"
+            "<div class=\"detail-block\">"
+            "<span class=\"detail-label\">Steps executed</span>"
+            f"{render_step_list(item.get('executed_steps', []))}"
             "</div>"
+            f"{render_notes_block(item.get('notes', []))}"
+            f"{render_evidence_block(item.get('evidence', []))}"
+            "</article>"
         )
     return "\n".join(cards)
 
@@ -207,21 +222,25 @@ def render_blocked_section(blocked_cases: list[dict]) -> str:
 def render_defect_section(defects: list[dict]) -> str:
     if not defects:
         return '<div class="empty-state">No confirmed defects were recorded in this run.</div>'
+
     cards = []
-    template_path = TEMPLATES_DIR / "defect-card.template.md"
     for defect in defects:
         cards.append(
-            "<div class=\"issue-card defect\">"
-            f"<h4>{escape(defect['defect_id'])}: {escape(defect['title'])}</h4>"
-            f"<p><strong>Test case:</strong> {escape(defect['test_case_id'])}</p>"
-            f"<p><strong>Requirement IDs:</strong> {escape(', '.join(defect['requirement_ids']))}</p>"
-            f"<p><strong>Failure:</strong> {escape(defect['failure_details'])}</p>"
-            f"<p><strong>Steps:</strong> {escape(' | '.join(defect['executed_steps']))}</p>"
-            f"<p><strong>Evidence:</strong> {escape(', '.join(defect['evidence']) if defect['evidence'] else 'None')}</p>"
-            "<div class=\"issue-markdown\">"
-            f"<pre>{escape(render_template(template_path, defect))}</pre>"
+            "<article class=\"issue-card defect\">"
+            f"<div class=\"issue-head\"><h3>{escape(defect['defect_id'])}</h3><span class=\"status Failed\">Failed</span></div>"
+            f"<h4>{escape(defect['title'])}</h4>"
+            "<div class=\"meta-chips\">"
+            f"<span class=\"chip\">Test Case: {escape(defect['test_case_id'])}</span>"
+            f"<span class=\"chip\">Requirements: {escape(', '.join(defect['requirement_ids']) or 'None')}</span>"
             "</div>"
+            f"<p class=\"issue-summary\">{escape(defect['failure_details'] or 'Failure details were not captured.')}</p>"
+            "<div class=\"detail-block\">"
+            "<span class=\"detail-label\">Executed steps</span>"
+            f"{render_step_list(defect['executed_steps'])}"
             "</div>"
+            f"{render_notes_block(defect.get('notes', []))}"
+            f"{render_evidence_block(defect['evidence'])}"
+            "</article>"
         )
     return "\n".join(cards)
 
@@ -233,36 +252,94 @@ def render_evidence_panels(results: list[dict]) -> str:
         if not evidence:
             continue
         panels.append(
-            "<div class=\"evidence-panel\">"
-            f"<h4>{escape(item.get('test_case_id', ''))}</h4>"
-            f"<p>{escape(item.get('title', ''))}</p>"
-            f"<div class=\"evidence-list\">{''.join(f'<span>{escape(ref)}</span>' for ref in evidence)}</div>"
-            "</div>"
+            "<article class=\"evidence-panel\">"
+            f"<div class=\"issue-head\"><h3>{escape(item.get('test_case_id', ''))}</h3><span class=\"status {escape(item.get('status', 'Unknown'))}\">{escape(item.get('status', 'Unknown'))}</span></div>"
+            f"<h4>{escape(item.get('title', ''))}</h4>"
+            f"{render_evidence_gallery(evidence, item.get('title', 'Evidence'))}"
+            "</article>"
         )
     if not panels:
         return '<div class="empty-state">No evidence references were captured.</div>'
     return "\n".join(panels)
 
 
-def render_chart_markup(counts: dict) -> str:
-    total = max(counts["executed"], 1)
-    passed_width = round((counts["passed"] / total) * 100, 1)
-    failed_width = round((counts["failed"] / total) * 100, 1)
-    blocked_width = round((counts["blocked"] / total) * 100, 1)
+def render_step_list(steps: list[str]) -> str:
+    if not steps:
+        return '<div class="muted">No executed steps were recorded.</div>'
+    items = "".join(f"<li>{escape(step)}</li>" for step in steps)
+    return f"<ol class=\"step-list\">{items}</ol>"
+
+
+def render_notes_block(notes: list[str]) -> str:
+    if not notes:
+        return ""
+    items = "".join(f"<li>{escape(note)}</li>" for note in notes)
     return (
-        '<div class="chart">'
-        '<div class="bar">'
-        f'<span class="segment passed" style="width:{passed_width}%"></span>'
-        f'<span class="segment failed" style="width:{failed_width}%"></span>'
-        f'<span class="segment blocked" style="width:{blocked_width}%"></span>'
-        "</div>"
-        '<div class="legend">'
-        f'<span><i class="swatch passed"></i>Passed {counts["passed"]}</span>'
-        f'<span><i class="swatch failed"></i>Failed {counts["failed"]}</span>'
-        f'<span><i class="swatch blocked"></i>Blocked {counts["blocked"]}</span>'
-        "</div>"
+        "<div class=\"detail-block\">"
+        "<span class=\"detail-label\">Notes</span>"
+        f"<ul class=\"note-list\">{items}</ul>"
         "</div>"
     )
+
+
+def render_evidence_block(evidence: list[str]) -> str:
+    if not evidence:
+        return ""
+    return (
+        "<div class=\"detail-block\">"
+        "<span class=\"detail-label\">Evidence</span>"
+        f"{render_evidence_gallery(evidence, 'Evidence reference')}"
+        "</div>"
+    )
+
+
+def render_evidence_gallery(evidence: list[str], title: str) -> str:
+    items = []
+    for ref in evidence:
+        safe_ref = escape(ref)
+        label = escape(Path(ref).name or ref)
+        if is_image_reference(ref):
+            items.append(
+                "<figure class=\"evidence-item image\">"
+                f"<a href=\"{safe_ref}\"><img src=\"{safe_ref}\" alt=\"{escape(title)}\" /></a>"
+                f"<figcaption>{label}</figcaption>"
+                "</figure>"
+            )
+        else:
+            items.append(
+                "<div class=\"evidence-item reference\">"
+                f"<a class=\"reference-pill\" href=\"{safe_ref}\">{label}</a>"
+                "</div>"
+            )
+    return f"<div class=\"evidence-gallery\">{''.join(items)}</div>"
+
+
+def build_pie_chart_style(counts: dict) -> str:
+    total = counts.get("executed", 0)
+    if total <= 0:
+        return "background: conic-gradient(#dbe5ef 0deg 360deg);"
+
+    passed_end = round((counts["passed"] / total) * 360, 1)
+    failed_end = round(((counts["passed"] + counts["failed"]) / total) * 360, 1)
+    return (
+        "background: conic-gradient("
+        f"var(--passed) 0deg {passed_end}deg, "
+        f"var(--failed) {passed_end}deg {failed_end}deg, "
+        f"var(--blocked) {failed_end}deg 360deg"
+        ");"
+    )
+
+
+def is_image_reference(reference: str) -> bool:
+    lowered = str(reference).lower()
+    return lowered.endswith(IMAGE_EXTENSIONS)
+
+
+def first_image_reference(evidence: list[str]) -> str:
+    for reference in evidence:
+        if is_image_reference(reference):
+            return reference
+    return ""
 
 
 def counts_or_zero(value) -> int:

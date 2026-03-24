@@ -70,6 +70,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="rqo-shareable-") as tmpdir:
         tmp_root = Path(tmpdir)
         report_dir = tmp_root / "report"
+        spec_dir = tmp_root / "playwright-specs"
 
         run(
             [
@@ -79,6 +80,28 @@ def main() -> None:
                 str(FLAGSHIP_ROOT / "tests" / "fixtures" / "sample_execution_results.json"),
                 "--output-dir",
                 str(report_dir),
+            ]
+        )
+
+        run(
+            [
+                sys.executable,
+                str(FLAGSHIP_ROOT / "scripts" / "import_test_cases_json.py"),
+                "--input",
+                str(FLAGSHIP_ROOT / "tests" / "fixtures" / "sample_test_cases.json"),
+                "--output",
+                str(tmp_root / "test-cases.json"),
+            ]
+        )
+
+        run(
+            [
+                sys.executable,
+                str(FLAGSHIP_ROOT / "scripts" / "export_playwright_specs.py"),
+                "--input",
+                str(tmp_root / "test-cases.json"),
+                "--output-dir",
+                str(spec_dir),
             ]
         )
 
@@ -95,6 +118,7 @@ def main() -> None:
                 ]
             )
         print(f"Smoke validation artifacts: {report_dir}")
+        print(f"Generated starter specs: {spec_dir}")
 
 
 if __name__ == "__main__":

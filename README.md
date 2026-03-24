@@ -1,6 +1,6 @@
 # Requirements QA Orchestrator Skills
 
-Cross-platform AI skills for turning product requirements into test cases, execution subsets, browser validation, and stakeholder-ready QA reports.
+Cross-platform AI skills for turning product requirements into test cases, reusable Playwright starter specs, execution subsets, browser validation, and stakeholder-ready QA reports.
 
 This repo is designed to work well for teams using Codex or Claude Code, especially PMs, BAs, QAs, and engineers who want a guided requirements-to-QA workflow instead of a one-off prompt.
 
@@ -23,6 +23,7 @@ It helps with:
 - guided intake and stage inference
 - requirement normalization
 - traceable test-case generation
+- optional grouped Playwright `.spec.ts` starter export
 - execution subset selection
 - browser validation with `playwright-cli`
 - HTML and PDF QA reporting
@@ -46,8 +47,10 @@ This repo is opinionated about fixing both problems.
 
 - lower token spend through bundled scripts and canonical JSON artifacts
 - better first-turn guidance that asks only the next blocker question
+- better generation guidance by explicitly resolving `full coverage` versus `smoke only`
 - preserved `test-cases` generation rules as a quality baseline
 - `playwright-cli` for browser execution and PDF export
+- reusable Playwright starter specs when teams want repo-friendly artifacts
 - reusable installation across projects and teammates
 - outputs that are readable by PM, BA, QA, and engineering stakeholders
 
@@ -158,9 +161,11 @@ Restart your agent app after installation.
 Once installed, good starter prompts include:
 
 - "Pull requirements from Confluence and generate test cases"
+- "Pull requirements from Confluence and generate full-coverage test cases plus reusable Playwright specs"
 - "Here is a PRD markdown file. Normalize it and create QA coverage"
 - "Here is a requirements JSON file. Build traceable QA artifacts"
 - "Here is a test-cases JSON file. Run the top 5 high-priority cases on staging"
+- "Export grouped Playwright .spec.ts starter files from this test-cases JSON"
 - "Turn these execution results into an HTML and PDF stakeholder report"
 
 ## Validation

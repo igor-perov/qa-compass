@@ -10,6 +10,8 @@ PROJECT_CONTEXT_KEYS = [
     "output_dir",
     "report_style",
     "execution_subset",
+    "generation_scope_prompt_required",
+    "playwright_specs_requested",
 ]
 
 REQUIREMENT_KEYS = [
@@ -28,6 +30,7 @@ REQUIREMENT_KEYS = [
 TEST_CASE_KEYS = [
     "test_case_id",
     "title",
+    "feature",
     "requirement_ids",
     "priority",
     "type",
@@ -74,6 +77,7 @@ STAGES = {
     "ingest",
     "normalize",
     "generate-cases",
+    "export-playwright-specs",
     "execute",
     "report",
 }

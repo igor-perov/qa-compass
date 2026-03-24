@@ -2,7 +2,7 @@
 
 ## Goal
 
-Produce a stakeholder-ready report that quickly shows scope, quality, blockers, and defects.
+Produce a stakeholder-ready report that quickly shows scope, quality, blockers, defects, and evidence in a clear executive dashboard style.
 
 ## Required Outputs
 
@@ -16,12 +16,12 @@ Produce a stakeholder-ready report that quickly shows scope, quality, blockers, 
 
 The report should be visibly stronger than a raw dump. Prefer:
 
-- a header with environment and run metadata
+- a clean default visual style with an executive header and environment metadata
 - summary cards
-- a simple opening diagram or chart
-- execution results table
+- a pie chart near the top for pass / fail / blocked distribution
+- execution results table with case ID, title, priority, duration, and status
 - blocked section
-- defect section
+- defect section with executed steps and failure summary
 - evidence panels or screenshot references
 
 ## Defect and Blocker Handling
@@ -38,6 +38,7 @@ For each defect include:
 - steps executed
 - failure description
 - screenshot path if available
+- evidence reference if available
 
 ## PDF Rule
 
@@ -58,3 +59,4 @@ A PM, BA, QA lead, or engineer should understand in under a minute:
 - what failed
 - what was blocked
 - what needs follow-up
+- where the screenshots or evidence live

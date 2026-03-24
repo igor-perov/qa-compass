@@ -6,17 +6,16 @@
   <title>QA Report - $project_name</title>
   <style>
     :root {
-      --bg: #eef3f8;
+      --bg: #f7f9fc;
       --surface: #ffffff;
-      --surface-soft: #f8fbff;
-      --text: #1f2a37;
-      --muted: #6b7788;
-      --border: #d9e2ec;
-      --passed: #20a464;
-      --failed: #d64545;
-      --blocked: #c78719;
-      --accent: #1746a2;
-      --shadow: 0 18px 45px rgba(17, 24, 39, 0.08);
+      --surface-soft: #fafbfd;
+      --border: #e6eaf0;
+      --text: #1a1a1a;
+      --muted: #667085;
+      --passed: #2ecc71;
+      --failed: #e74c3c;
+      --blocked: #f39c12;
+      --shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
     }
 
     @page {
@@ -30,68 +29,75 @@
 
     body {
       margin: 0;
-      padding: 32px;
-      background: linear-gradient(180deg, #f4f8fb 0%, #e9f0f7 100%);
+      padding: 40px;
       color: var(--text);
-      font-family: "Avenir Next", "Segoe UI", sans-serif;
+      background: var(--bg);
+      font-family: "Inter", "Segoe UI", sans-serif;
     }
 
     .container {
-      max-width: 1280px;
+      max-width: 1180px;
       margin: 0 auto;
-      background: rgba(255, 255, 255, 0.96);
-      border: 1px solid rgba(217, 226, 236, 0.9);
-      border-radius: 28px;
-      padding: 32px;
+      background: var(--surface);
+      padding: 40px;
+      border-radius: 18px;
       box-shadow: var(--shadow);
     }
 
     .header {
       display: flex;
       justify-content: space-between;
-      gap: 24px;
       align-items: flex-start;
-      margin-bottom: 28px;
+      gap: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      margin-bottom: 30px;
+    }
+
+    .header-copy {
+      max-width: 620px;
     }
 
     .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: #e8f0ff;
-      color: var(--accent);
-      padding: 8px 12px;
+      display: inline-block;
+      padding: 6px 10px;
       border-radius: 999px;
+      background: #eef4ff;
+      color: #3358b3;
       font-size: 12px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      font-weight: 700;
     }
 
     h1 {
-      margin: 12px 0 8px;
+      margin: 12px 0 6px;
       font-size: 34px;
-      line-height: 1.08;
+      line-height: 1.1;
     }
 
-    .subhead {
+    .subtitle {
       margin: 0;
       color: var(--muted);
-      max-width: 720px;
       line-height: 1.6;
     }
 
     .meta-grid {
-      min-width: 300px;
+      min-width: 320px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 14px;
     }
 
-    .meta-card, .summary-card, .panel, .issue-card, .evidence-panel {
-      background: var(--surface-soft);
+    .meta-card,
+    .card,
+    .chart-card,
+    .section-card,
+    .issue-card,
+    .evidence-panel {
       border: 1px solid var(--border);
-      border-radius: 18px;
+      border-radius: 14px;
+      background: var(--surface-soft);
     }
 
     .meta-card {
@@ -105,6 +111,7 @@
       text-transform: uppercase;
       letter-spacing: 0.08em;
       margin-bottom: 6px;
+      font-weight: 700;
     }
 
     .meta-value {
@@ -119,70 +126,106 @@
       margin-bottom: 28px;
     }
 
-    .summary-grid {
+    .summary-cards {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 16px;
     }
 
-    .summary-card {
+    .card {
       padding: 18px;
+      text-align: center;
+      background: #fcfcfd;
     }
 
-    .summary-card h3 {
+    .card h3 {
       margin: 0;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--muted);
-    }
-
-    .summary-card .value {
-      margin-top: 12px;
-      font-size: 34px;
-      font-weight: 800;
-    }
-
-    .summary-card .hint {
-      margin-top: 10px;
       font-size: 13px;
       color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
-    .panel {
-      padding: 20px;
+    .value {
+      font-size: 36px;
+      font-weight: 800;
+      margin-top: 10px;
     }
 
-    .panel h2 {
+    .hint {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .chart-card,
+    .section-card {
+      padding: 22px;
+      background: #fdfdfd;
+    }
+
+    .chart-card h2,
+    .section-card h2 {
       margin: 0 0 16px;
-      font-size: 20px;
+      font-size: 22px;
     }
 
-    .chart .bar {
+    .chart-card p {
+      margin: 0 0 18px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .pie-chart-wrap {
       display: flex;
-      width: 100%;
-      height: 18px;
-      overflow: hidden;
-      border-radius: 999px;
-      background: #dde7f1;
-      margin: 14px 0 16px;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 0 4px;
     }
 
-    .segment {
-      display: block;
-      height: 100%;
+    .pie-chart {
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
     }
 
-    .segment.passed, .swatch.passed { background: var(--passed); }
-    .segment.failed, .swatch.failed { background: var(--failed); }
-    .segment.blocked, .swatch.blocked { background: var(--blocked); }
+    .pie-chart-center {
+      position: absolute;
+      inset: 52px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .pie-chart-center strong {
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .pie-chart-center span {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
 
     .legend {
       display: flex;
+      justify-content: center;
       flex-wrap: wrap;
       gap: 14px;
-      font-size: 13px;
+      margin-top: 18px;
       color: var(--muted);
+      font-size: 13px;
     }
 
     .legend span {
@@ -192,10 +235,18 @@
     }
 
     .swatch {
-      display: inline-block;
       width: 12px;
       height: 12px;
       border-radius: 999px;
+      display: inline-block;
+    }
+
+    .swatch.passed { background: var(--passed); }
+    .swatch.failed { background: var(--failed); }
+    .swatch.blocked { background: var(--blocked); }
+
+    .section-card {
+      margin-top: 24px;
     }
 
     table {
@@ -204,134 +255,231 @@
       font-size: 14px;
     }
 
-    th, td {
-      padding: 14px 12px;
+    th,
+    td {
+      padding: 12px;
       text-align: left;
       border-bottom: 1px solid var(--border);
+      vertical-align: top;
     }
 
     th {
       color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
       font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
     }
 
     .status {
       display: inline-flex;
-      padding: 6px 10px;
+      align-items: center;
+      justify-content: center;
+      min-width: 92px;
+      text-align: center;
+      font-weight: 700;
+      padding: 5px 10px;
       border-radius: 999px;
       font-size: 12px;
-      font-weight: 800;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
 
-    .status.Passed { background: rgba(32, 164, 100, 0.12); color: var(--passed); }
-    .status.Failed { background: rgba(214, 69, 69, 0.12); color: var(--failed); }
-    .status.Blocked { background: rgba(199, 135, 25, 0.12); color: var(--blocked); }
+    .status.Passed {
+      background: #eafaf1;
+      color: #239b56;
+    }
 
-    .section-grid {
+    .status.Failed {
+      background: #fdeeee;
+      color: #c0392b;
+    }
+
+    .status.Blocked {
+      background: #fff5e8;
+      color: #b96c0b;
+    }
+
+    .split-sections {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 24px;
       margin-top: 24px;
     }
 
-    .issue-card {
+    .issue-card,
+    .evidence-panel {
       padding: 18px;
       margin-bottom: 14px;
-    }
-
-    .issue-card h4 {
-      margin: 0 0 10px;
-      font-size: 18px;
-    }
-
-    .issue-card p {
-      margin: 0 0 8px;
-      line-height: 1.6;
-      color: #344054;
+      background: white;
     }
 
     .issue-card.defect {
-      border-left: 6px solid var(--failed);
+      border-left: 5px solid var(--failed);
     }
 
     .issue-card.blocked {
-      border-left: 6px solid var(--blocked);
+      border-left: 5px solid var(--blocked);
     }
 
-    .issue-markdown pre {
-      white-space: pre-wrap;
-      background: rgba(255, 255, 255, 0.7);
-      padding: 14px;
-      border-radius: 12px;
+    .issue-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .issue-head h3,
+    .evidence-panel h3 {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .issue-card h4,
+    .evidence-panel h4 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .issue-summary {
+      margin: 0 0 14px;
+      color: #344054;
+      line-height: 1.6;
+    }
+
+    .meta-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .chip,
+    .reference-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f2f4f7;
+      color: #344054;
       font-size: 12px;
-      overflow: auto;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .detail-block {
+      margin-top: 14px;
+    }
+
+    .detail-label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .step-list,
+    .note-list {
+      margin: 0;
+      padding-left: 20px;
+      color: #344054;
+      line-height: 1.7;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 14px;
     }
 
     .evidence-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 16px;
-      margin-top: 18px;
     }
 
-    .evidence-panel {
-      padding: 16px;
+    .evidence-gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
     }
 
-    .evidence-panel h4 {
-      margin: 0 0 8px;
+    .evidence-item {
+      margin: 0;
     }
 
-    .evidence-panel p {
-      margin: 0 0 12px;
-      color: var(--muted);
+    .evidence-item.image img {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #f4f6f8;
+      display: block;
     }
 
-    .evidence-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
-    .evidence-list span {
-      display: inline-flex;
-      background: #edf4ff;
-      color: var(--accent);
-      padding: 6px 10px;
-      border-radius: 999px;
+    .evidence-item figcaption {
+      margin-top: 8px;
       font-size: 12px;
+      color: var(--muted);
+      word-break: break-word;
     }
 
     .empty-state {
-      padding: 18px;
+      padding: 20px;
       border: 1px dashed var(--border);
-      border-radius: 16px;
+      border-radius: 12px;
+      background: white;
       color: var(--muted);
-      background: #fbfdff;
     }
 
-    @media (max-width: 960px) {
-      body { padding: 18px; }
-      .header, .dashboard, .section-grid { grid-template-columns: 1fr; display: grid; }
-      .meta-grid, .summary-grid, .evidence-grid { grid-template-columns: 1fr; }
+    @media (max-width: 980px) {
+      body {
+        padding: 20px;
+      }
+
+      .container {
+        padding: 24px;
+      }
+
+      .header,
+      .dashboard,
+      .split-sections,
+      .evidence-grid {
+        display: block;
+      }
+
+      .meta-grid,
+      .summary-cards,
+      .evidence-gallery {
+        grid-template-columns: 1fr;
+      }
+
+      .chart-card,
+      .section-card {
+        margin-top: 20px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <div>
-        <span class="eyebrow">Requirements QA Orchestrator</span>
-        <h1>$project_name QA Report</h1>
-        <p class="subhead">A stakeholder-ready execution summary with explicit blocker and defect handling. Counts below cover the selected run subset and preserve the difference between product failures and external execution blockers.</p>
+      <div class="header-copy">
+        <span class="eyebrow">Requirements QA Report</span>
+        <h1>$project_name</h1>
+        <p class="subtitle">A stakeholder-ready summary of what was tested, what failed, what was blocked, and where the strongest evidence lives.</p>
       </div>
       <div class="meta-grid">
         <div class="meta-card">
-          <span class="meta-label">Run Date</span>
+          <span class="meta-label">Date</span>
           <span class="meta-value">$run_date</span>
         </div>
         <div class="meta-card">
@@ -339,7 +487,7 @@
           <span class="meta-value">$environment</span>
         </div>
         <div class="meta-card">
-          <span class="meta-label">Subset</span>
+          <span class="meta-label">Subset Mode</span>
           <span class="meta-value">$subset_mode</span>
         </div>
         <div class="meta-card">
@@ -350,52 +498,67 @@
     </div>
 
     <div class="dashboard">
-      <div class="summary-grid">
-        <div class="summary-card">
+      <div class="summary-cards">
+        <div class="card">
           <h3>Executed</h3>
           <div class="value">$executed_count</div>
           <div class="hint">Cases exercised in this run</div>
         </div>
-        <div class="summary-card">
+        <div class="card">
           <h3>Passed</h3>
           <div class="value" style="color: var(--passed);">$passed_count</div>
           <div class="hint">Observed expected behavior</div>
         </div>
-        <div class="summary-card">
+        <div class="card">
           <h3>Failed</h3>
           <div class="value" style="color: var(--failed);">$failed_count</div>
           <div class="hint">Confirmed behavior mismatches</div>
         </div>
-        <div class="summary-card">
+        <div class="card">
           <h3>Blocked</h3>
           <div class="value" style="color: var(--blocked);">$blocked_count</div>
-          <div class="hint">Execution stopped by external blockers</div>
+          <div class="hint">External blockers or access gaps</div>
         </div>
-        <div class="summary-card">
-          <h3>Requirements</h3>
-          <div class="value">$requirements_count</div>
-          <div class="hint">Covered requirement records</div>
+        <div class="card">
+          <h3>Defects</h3>
+          <div class="value">$defect_count</div>
+          <div class="hint">Confirmed defect cards created</div>
         </div>
-        <div class="summary-card">
-          <h3>Cases In Scope</h3>
-          <div class="value">$test_cases_count</div>
-          <div class="hint">Cases available for this bundle</div>
+        <div class="card">
+          <h3>Blocked Cases</h3>
+          <div class="value">$blocked_case_count</div>
+          <div class="hint">Cases awaiting follow-up</div>
         </div>
       </div>
-      <div class="panel">
-        <h2>Execution Diagram</h2>
-        $chart_markup
+
+      <div class="chart-card">
+        <h2>Execution Overview</h2>
+        <p>The pie chart shows the distribution of outcomes for the executed subset, keeping true failures separate from blocked runs.</p>
+        <div class="pie-chart-wrap">
+          <div class="pie-chart" style="$pie_chart_style">
+            <div class="pie-chart-center">
+              <strong>$executed_count</strong>
+              <span>Executed</span>
+            </div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i class="swatch passed"></i>Passed $passed_count</span>
+          <span><i class="swatch failed"></i>Failed $failed_count</span>
+          <span><i class="swatch blocked"></i>Blocked $blocked_count</span>
+        </div>
       </div>
     </div>
 
-    <div class="panel">
-      <h2>Execution Table</h2>
+    <div class="section-card">
+      <h2>Execution Details</h2>
       <table>
         <thead>
           <tr>
             <th>ID</th>
             <th>Title</th>
-            <th>Duration</th>
+            <th>Priority</th>
+            <th>Time</th>
             <th>Status</th>
           </tr>
         </thead>
@@ -405,19 +568,19 @@
       </table>
     </div>
 
-    <div class="section-grid">
-      <div class="panel">
+    <div class="split-sections">
+      <div class="section-card">
         <h2>Blocked Cases</h2>
         $blocked_cases_section
       </div>
-      <div class="panel">
-        <h2>Defects</h2>
+      <div class="section-card">
+        <h2>Confirmed Defects</h2>
         $defect_section
       </div>
     </div>
 
-    <div class="panel" style="margin-top: 24px;">
-      <h2>Evidence Panels</h2>
+    <div class="section-card">
+      <h2>Evidence Gallery</h2>
       <div class="evidence-grid">
         $evidence_panels
       </div>

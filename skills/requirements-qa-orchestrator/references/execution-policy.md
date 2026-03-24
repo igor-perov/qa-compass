@@ -8,6 +8,8 @@ Run the smallest useful subset first, gather strong evidence, and keep result st
 
 Browser execution and PDF export must use `playwright-cli`.
 
+Reusable Playwright `.spec.ts` files are optional starter artifacts. They are for reuse and refinement, not a replacement for `playwright-cli` execution inside this workflow.
+
 ```bash
 npm install -g @playwright/cli@latest
 playwright-cli --help

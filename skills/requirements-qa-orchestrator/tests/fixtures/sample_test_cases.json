@@ -4,6 +4,7 @@
     {
       "id": "TC-AUTH-F-001",
       "title": "Register with a valid work email",
+      "feature": "Auth",
       "requirement_ids": [
         "AUTH-1"
       ],
@@ -27,6 +28,7 @@
     {
       "id": "TC-AUTH-ERR-001",
       "title": "Reject a public email domain",
+      "feature": "Auth",
       "requirement_ids": [
         "AUTH-1"
       ],
@@ -43,6 +45,46 @@
         "Continue remains unavailable"
       ],
       "automation_candidate": true
+    },
+    {
+      "id": "TC-COMPANY-F-001",
+      "title": "Complete company data",
+      "feature": "Company Data",
+      "requirement_ids": [
+        "ST1-1"
+      ],
+      "priority": "Medium",
+      "category": "Functional",
+      "preconditions": [
+        "User is logged in"
+      ],
+      "steps": [
+        "Open company data",
+        "Fill all required fields",
+        "Continue"
+      ],
+      "expected_results": [
+        "Stage 1 progresses"
+      ],
+      "automation_candidate": true
+    },
+    {
+      "id": "TC-HELP-F-001",
+      "title": "Open help tooltip",
+      "feature": "General",
+      "requirement_ids": [
+        "UX-1"
+      ],
+      "priority": "Low",
+      "category": "Functional",
+      "preconditions": [],
+      "steps": [
+        "Open tooltip"
+      ],
+      "expected_results": [
+        "Tooltip is visible"
+      ],
+      "automation_candidate": false
     }
   ]
 }
