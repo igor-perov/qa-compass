@@ -21,13 +21,15 @@ class ArtifactManifestTests(unittest.TestCase):
             (run_dir / "04-execution").mkdir()
             (run_dir / "05-reports").mkdir()
             (run_dir / "00-overview" / "project-summary.md").write_text("# Project", encoding="utf-8")
+            (run_dir / "01-sources").mkdir()
+            (run_dir / "01-sources" / "confluence-intake-diagnostics.json").write_text("{}", encoding="utf-8")
             (run_dir / "03-generated" / "test-cases.json").write_text("{}", encoding="utf-8")
             (run_dir / "04-execution" / "qa-scope-preview.html").write_text("<html></html>", encoding="utf-8")
             (run_dir / "05-reports" / "qa-report.internal.html").write_text("<html></html>", encoding="utf-8")
 
             summary = build_artifact_manifest.build_artifact_manifest(str(run_dir))
 
-            self.assertEqual(summary["artifact_count"], 4)
+            self.assertEqual(summary["artifact_count"], 5)
             manifest_path = run_dir / "00-overview" / "artifact-manifest.json"
             legend_path = run_dir / "00-overview" / "artifact-legend.md"
             self.assertTrue(manifest_path.exists())
@@ -43,11 +45,17 @@ class ArtifactManifestTests(unittest.TestCase):
             )
             self.assertEqual(scope_preview["label"], "QA scope preview")
             self.assertFalse(scope_preview["source_of_truth"])
+            diagnostics = next(
+                item for item in manifest["artifacts"] if item["path"] == "01-sources/confluence-intake-diagnostics.json"
+            )
+            self.assertEqual(diagnostics["label"], "Confluence intake diagnostics")
+            self.assertFalse(diagnostics["source_of_truth"])
 
             legend = legend_path.read_text(encoding="utf-8")
             self.assertIn("Generated Files And Artifact Legend", legend)
             self.assertIn("03-generated/test-cases.json", legend)
             self.assertIn("04-execution/qa-scope-preview.html", legend)
+            self.assertIn("01-sources/confluence-intake-diagnostics.json", legend)
             self.assertIn("Source of truth for generated QA coverage", legend)
 
 

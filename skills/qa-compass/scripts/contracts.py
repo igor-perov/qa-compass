@@ -79,6 +79,7 @@ STATUS_VALUES = {
 
 SOURCE_MODES = {
     "confluence",
+    "confluence_folder",
     "jira",
     "jira_confluence",
     "requirements_json",

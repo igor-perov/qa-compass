@@ -8,17 +8,37 @@ Support multiple start modes without forcing everything through Confluence.
 
 ### `confluence`
 
-Use when requirements live in an Atlassian page tree or folder.
+Use when requirements live in an Atlassian page tree.
 
 Required for ingest:
-- base URL
-- user email
-- API token
-- root page or folder id/url
+- page URL or page ID
+- connector access when available, otherwise base URL, user email, and API token
 
 Outputs:
 - `confluence-tree.md`
 - `requirements-raw.json`
+- `source-index.json`
+- `confluence-intake-diagnostics.json`
+
+### `confluence_folder`
+
+Use when requirements start from a Confluence folder URL such as `/wiki/spaces/{spaceKey}/folder/{folderId}`.
+
+Required for ingest:
+- folder URL
+- connector access when available, otherwise base URL, user email, and API token
+
+Rules:
+- do not treat folder IDs as page IDs
+- prefer Atlassian Rovo connector discovery/read when available
+- fall back to REST folder children discovery, then space/page search
+- write non-sensitive diagnostics even when no pages are fetched
+
+Outputs:
+- `confluence-tree.md`
+- `requirements-raw.json`
+- `source-index.json`
+- `confluence-intake-diagnostics.json`
 
 ### `jira`
 

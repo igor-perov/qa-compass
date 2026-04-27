@@ -30,6 +30,8 @@ QA Compass can help with:
 - `draft-defects`
 - `create-jira-defects` optional and confirmation-gated
 
+Before moving from `scope-preview` to `execute`, explicitly ask whether the scope and generated cases are acceptable or should be changed. Start browser execution only after the user confirms, unless the same request already gave explicit approval.
+
 ## Token Economy
 
 Reuse existing canonical artifacts whenever possible. Use scripts for mechanical conversion and AI for interpretation, test design, and defect wording.

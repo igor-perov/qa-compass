@@ -34,3 +34,5 @@ Use `feature` by default when feature names are available. Prefer `role` only wh
 ## Reporting Rule
 
 Preserve the confirmed `grouping_strategy` in execution results. Internal reports must render execution details grouped by the selected strategy so reviewed and passed cases remain easy to scan by feature, module, role, Jira epic/component, source section, or custom scope.
+
+Internal reports must also show detected/executed roles as a visible overview and mark each executed case, blocked case, defect card, and evidence panel with the role or roles involved when that data is known.

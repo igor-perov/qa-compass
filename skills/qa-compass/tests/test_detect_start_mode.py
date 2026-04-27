@@ -19,6 +19,8 @@ class DetectStartModeTests(unittest.TestCase):
         self.assertIn("name: qa-compass", skill_text)
         self.assertIn("# QA Compass", skill_text)
         self.assertIn("Jira", skill_text)
+        self.assertIn("Detect And Protect Secrets", skill_text)
+        self.assertIn("never write it to artifacts", skill_text)
         self.assertIn('display_name: "QA Compass"', openai_yaml)
         self.assertIn("$qa-compass", openai_yaml)
 
@@ -27,6 +29,13 @@ class DetectStartModeTests(unittest.TestCase):
         self.assertEqual(payload["source_mode"], "confluence")
         self.assertEqual(payload["stage"], "generate-cases")
         self.assertTrue(payload["generation_scope_prompt_required"])
+
+    def test_detects_confluence_folder_url(self):
+        payload = detect_start_mode(
+            "Use https://kepler-team.atlassian.net/wiki/spaces/VI/folder/1040482348 and generate QA coverage"
+        )
+        self.assertEqual(payload["source_mode"], "confluence_folder")
+        self.assertEqual(payload["stage"], "generate-cases")
 
     def test_detects_markdown_normalization_request(self):
         payload = detect_start_mode("Here is a PRD markdown file. Normalize it and create QA coverage")

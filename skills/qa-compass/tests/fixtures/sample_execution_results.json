@@ -14,6 +14,9 @@
       "priority": "High",
       "type": "Functional",
       "feature": "Authentication",
+      "roles": [
+        "Anonymous visitor"
+      ],
       "duration": "0m 42s",
       "requirement_ids": [
         "AUTH-1"
@@ -40,6 +43,9 @@
       "priority": "High",
       "type": "Error Handling",
       "feature": "Authentication",
+      "roles": [
+        "Anonymous visitor"
+      ],
       "duration": "0m 18s",
       "requirement_ids": [
         "AUTH-1"
@@ -80,6 +86,9 @@
       "priority": "Medium",
       "type": "Functional",
       "feature": "Company Data",
+      "roles": [
+        "Registered user"
+      ],
       "duration": "0m 12s",
       "requirement_ids": [
         "ST1-1"

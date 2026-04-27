@@ -73,6 +73,10 @@ Ask only if the missing information blocks the next action. Good blocker questio
 - unresolved source-of-truth conflict between Jira and Confluence before generating final coverage
 - unconfirmed roles or grouping strategy if they materially affect coverage structure
 - whether grouped Playwright `.spec.ts` starter files are wanted when the user asks for reusable automation artifacts
+
+## Confluence Folder Detection
+
+Treat `/wiki/spaces/{spaceKey}/folder/{folderId}` and `/spaces/{spaceKey}/folder/{folderId}` as `confluence_folder`. Route these through the Confluence folder fallback chain instead of page-body fetch by ID.
 - explicit confirmation before creating Jira issues from reviewed bug drafts
 - ambiguous target stage with multiple valid interpretations
 

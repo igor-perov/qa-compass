@@ -14,6 +14,7 @@ It is prompt-first where QA judgment is needed, but uses bundled scripts and can
 ## When to Use
 
 - Requirements start in Confluence
+- Requirements start from a Confluence folder URL
 - Requirements start in Jira
 - Requirements already exist as JSON
 - A PRD or spec exists as markdown
@@ -82,16 +83,20 @@ Detailed rules live in:
 
 ## Hard Rules
 
+- Detect And Protect Secrets: If the user provides an API token, password, session token, bearer token, cookie, OTP, or Atlassian token, never echo it back, never write it to artifacts, recommend rotation if it was exposed in chat, and prefer connector-based auth when available.
 - Confluence support stays first-class, but it is optional.
+- Confluence folders are first-class inputs. Folder URLs must be treated as `confluence_folder`, not as page IDs.
+- For Confluence folders, prefer Atlassian Rovo connector discovery/read when available; if REST folder discovery fails, continue with search fallback before asking the user for exports.
 - Jira support stays source-adapter and draft-first; do not create Jira issues without explicit confirmation and project-specific configuration.
 - When generating test cases, do not invent a new methodology.
 - Use the bundled `references/embedded-test-cases-skill.md` guidance as the quality baseline.
 - Use `scripts/prepare_test_case_brief.py` only to reduce token spend and shape inputs.
 - When requirements are the source for case generation, explicitly resolve `full coverage` versus `smoke only` before generating the suite.
 - Reusable Playwright `.spec.ts` files are optional starter artifacts and should be grouped by feature or module when exported.
-- Before browser execution, generate a pre-execution scope preview when test cases or an execution subset are available, then ask the user to confirm the scope.
+- Before browser execution, generate a pre-execution scope preview when test cases or an execution subset are available. Share the preview artifact path and explicitly ask whether the scope and generated cases are acceptable or should be changed. Do not start execution until the user confirms, unless the user already gave explicit approval in the same request.
 - Every run should preserve reusable QA memory so future runs can reuse canonical artifacts before re-ingesting or regenerating.
-- Browser execution and PDF export must use `playwright-cli`.
+- Browser execution must use `playwright-cli`.
+- Do not generate PDF reports by default. Prefer HTML reports because they are more predictable; only run the PDF helper when the user explicitly asks for experimental PDF export.
 - Generated `.spec.ts` files do not replace `playwright-cli` for live execution inside this skill.
 - Prefer canonical JSON artifacts first, then render markdown and HTML from them.
 - Keep reusable scripts and templates in this skill folder; create project-local files only for outputs and run artifacts.

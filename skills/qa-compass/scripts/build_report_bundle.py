@@ -2,10 +2,26 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import shutil
 from html import escape
 from pathlib import Path
+from urllib.parse import quote, urlparse
 
 from io_utils import read_json, render_template, write_json, write_text
+
+try:
+    from build_artifact_manifest import KNOWN_ARTIFACTS, default_metadata
+except ImportError:  # pragma: no cover - direct script fallback
+    KNOWN_ARTIFACTS = {}
+
+    def default_metadata(filename: str) -> dict:
+        return {
+            "label": filename,
+            "description": "Generated run artifact.",
+            "created_by": "unknown",
+            "source_of_truth": False,
+        }
 
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
@@ -34,6 +50,7 @@ def classify_defects(results: list[dict]) -> list[dict]:
                 "test_case_id": result.get("test_case_id", ""),
                 "title": result.get("title", "Unnamed failed case"),
                 "requirement_ids": result.get("requirement_ids", []),
+                "roles": role_names(result),
                 "executed_steps": result.get("executed_steps", []),
                 "expected_results": force_list(result.get("expected_results") or result.get("expected_result")),
                 "actual_result": result.get("actual_result", ""),
@@ -53,7 +70,11 @@ def classify_defects(results: list[dict]) -> list[dict]:
 
 def build_report_bundle(input_path: str, output_dir: str) -> dict:
     payload = read_json(input_path)
+    destination = Path(output_dir)
+    destination.mkdir(parents=True, exist_ok=True)
+
     results = payload.get("results", [])
+    prepare_evidence_assets(results, Path(input_path).resolve().parent, destination)
     counts = build_counts(results)
     defects = classify_defects(results)
     blocked_cases = [item for item in results if item.get("status") == "Blocked"]
@@ -70,9 +91,6 @@ def build_report_bundle(input_path: str, output_dir: str) -> dict:
         "defects": defects,
         "blocked_cases": blocked_cases,
     }
-
-    destination = Path(output_dir)
-    destination.mkdir(parents=True, exist_ok=True)
 
     execution_plan = render_execution_plan(report_input)
     execution_results = render_execution_results(report_input)
@@ -102,6 +120,7 @@ def build_run_summary(report_input: dict) -> dict:
             {
                 "test_case_id": item.get("test_case_id"),
                 "title": item.get("title"),
+                "roles": role_names(item),
                 "blocker_details": item.get("blocker_details", ""),
             }
             for item in report_input["blocked_cases"]
@@ -186,6 +205,7 @@ def render_html_report(report_input: dict) -> str:
             "blocked_case_count": len(report_input["blocked_cases"]),
             "pie_chart_style": build_pie_chart_style(counts),
             "grouping_label": escape(grouping_label(report_input["grouping_strategy"])),
+            "roles_overview_section": render_roles_overview(report_input["results"]),
             "results_sections": render_results_sections(report_input["results"], report_input["grouping_strategy"]),
             "blocked_cases_section": render_blocked_section(report_input["blocked_cases"]),
             "defect_section": render_defect_section(report_input["defects"]),
@@ -223,34 +243,81 @@ def render_external_html_report(report_input: dict) -> str:
 
 def render_artifact_details(output_dir: Path | None = None) -> str:
     artifacts = discover_report_artifacts(output_dir)
-    rows = "".join(
-        f'<li><a href="{escape(path)}">{escape(path)}</a> — {escape(description)}</li>'
-        for path, description in artifacts
-    )
+    rows = render_artifact_list(artifacts)
     return (
         '<details class="section-card artifact-legend">'
         "<summary><strong>Generated files and artifact legend</strong></summary>"
-        f"<ul>{rows}</ul>"
+        f"{rows}"
         "</details>"
     )
 
 
 def discover_report_artifacts(output_dir: Path | None = None) -> list[tuple[str, str]]:
-    known_artifacts = [
-        ("execution-plan.md", "Readable execution plan for the selected subset."),
-        ("execution-results.md", "Detailed team-facing execution notes."),
-        ("run-summary.json", "Machine-readable summary metrics, defects, and blockers."),
-        ("qa-report.external.html", "Client-facing executive dashboard."),
-        ("qa-report.internal.html", "Detailed internal report with evidence and generated file legend."),
+    expected_report_artifacts = [
+        "execution-plan.md",
+        "execution-results.md",
+        "run-summary.json",
+        "qa-report.external.html",
+        "qa-report.internal.html",
+        "qa-report.html",
     ]
     if output_dir is None:
-        return known_artifacts
+        return [(path, artifact_description(path)) for path in expected_report_artifacts]
 
-    discovered = []
-    for path, description in known_artifacts:
-        if (output_dir / path).exists() or path == "qa-report.internal.html":
-            discovered.append((path, description))
-    return discovered
+    artifacts: dict[str, str] = {}
+    for manifest_path, manifest_root in artifact_manifest_paths(output_dir):
+        if not manifest_path.exists():
+            continue
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        for artifact in manifest.get("artifacts", []):
+            path = str(artifact.get("path") or "").strip()
+            if path:
+                link_path = relative_artifact_link(manifest_root / path, output_dir)
+                artifacts[link_path] = str(artifact.get("description") or artifact_description(path))
+
+    for path in sorted(output_dir.rglob("*")):
+        if path.is_file() and not path.name.startswith("."):
+            relative_path = path.relative_to(output_dir).as_posix()
+            artifacts.setdefault(relative_path, artifact_description(relative_path))
+
+    for path in expected_report_artifacts:
+        if (output_dir / path).exists() or path in {"qa-report.internal.html", "qa-report.html"}:
+            artifacts.setdefault(path, artifact_description(path))
+
+    return sorted(artifacts.items(), key=lambda item: item[0].lower())
+
+
+def artifact_manifest_paths(output_dir: Path) -> list[tuple[Path, Path]]:
+    return [
+        (output_dir / "artifact-manifest.json", output_dir),
+        (output_dir / "00-overview" / "artifact-manifest.json", output_dir),
+        (output_dir.parent / "artifact-manifest.json", output_dir.parent),
+        (output_dir.parent / "00-overview" / "artifact-manifest.json", output_dir.parent),
+    ]
+
+
+def relative_artifact_link(artifact_path: Path, output_dir: Path) -> str:
+    return Path(os.path.relpath(artifact_path, output_dir)).as_posix()
+
+
+def artifact_description(path: str) -> str:
+    metadata = KNOWN_ARTIFACTS.get(Path(path).name, default_metadata(Path(path).name))
+    return metadata["description"]
+
+
+def render_artifact_list(artifacts: list[tuple[str, str]]) -> str:
+    items = []
+    for path, description in artifacts:
+        items.append(
+            "<li class=\"artifact-item\">"
+            f'<a href="{escape(url_ref(path))}">{escape(path)}</a>'
+            f'<span class="artifact-description">{escape(description)}</span>'
+            "</li>"
+        )
+    return f'<ul class="artifact-list">{"".join(items)}</ul>'
 
 
 def render_external_defect_summary(defects: list[dict]) -> str:
@@ -288,6 +355,7 @@ def render_results_rows(results: list[dict]) -> str:
             "<tr>"
             f"<td data-label=\"ID\">{escape(item.get('test_case_id', ''))}</td>"
             f"<td data-label=\"Title\">{escape(item.get('title', ''))}</td>"
+            f"<td data-label=\"Roles\">{render_role_chips(role_names(item))}</td>"
             f"<td data-label=\"Priority\">{escape(item.get('priority', 'Medium'))}</td>"
             f"<td data-label=\"Time\">{escape(item.get('duration', '-'))}</td>"
             f"<td data-label=\"Status\"><span class=\"status {escape(item.get('status', 'Unknown'))}\">{escape(item.get('status', 'Unknown'))}</span></td>"
@@ -309,7 +377,7 @@ def render_results_sections(results: list[dict], grouping_strategy: str) -> str:
             f"<span>{len(group_results_list)} {count_label}</span>"
             "</div>"
             "<table>"
-            "<thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Time</th><th>Status</th></tr></thead>"
+            "<thead><tr><th>ID</th><th>Title</th><th>Roles</th><th>Priority</th><th>Time</th><th>Status</th></tr></thead>"
             f"<tbody>{rows}</tbody>"
             "</table>"
             "</section>"
@@ -399,6 +467,7 @@ def render_blocked_section(blocked_cases: list[dict]) -> str:
             "<article class=\"issue-card blocked\">"
             f"<div class=\"issue-head\"><h3>{escape(item.get('test_case_id', ''))}</h3><span class=\"status Blocked\">Blocked</span></div>"
             f"<h4>{escape(item.get('title', ''))}</h4>"
+            f"{render_case_meta_chips(item)}"
             f"<p class=\"issue-summary\">{escape(item.get('blocker_details', 'Blocked without additional details.'))}</p>"
             "<div class=\"detail-block\">"
             "<span class=\"detail-label\">Steps executed</span>"
@@ -424,6 +493,7 @@ def render_defect_section(defects: list[dict]) -> str:
             "<div class=\"meta-chips\">"
             f"<span class=\"chip\">Test Case: {escape(defect['test_case_id'])}</span>"
             f"<span class=\"chip\">Requirements: {escape(', '.join(defect['requirement_ids']) or 'None')}</span>"
+            f"{render_role_chips(defect.get('roles', []), prefix='Roles: ')}"
             "</div>"
             f"<p class=\"issue-summary\">{escape(defect['failure_details'] or 'Failure details were not captured.')}</p>"
             f"{render_detail_list_block('Expected result', defect.get('expected_results', []))}"
@@ -453,6 +523,7 @@ def render_evidence_panels(results: list[dict]) -> str:
             "<article class=\"evidence-panel\">"
             f"<div class=\"issue-head\"><h3>{escape(item.get('test_case_id', ''))}</h3><span class=\"status {escape(item.get('status', 'Unknown'))}\">{escape(item.get('status', 'Unknown'))}</span></div>"
             f"<h4>{escape(item.get('title', ''))}</h4>"
+            f"{render_case_meta_chips(item)}"
             f"{render_evidence_gallery(evidence, item.get('title', 'Evidence'))}"
             "</article>"
         )
@@ -553,7 +624,7 @@ def render_evidence_block(evidence: list[str]) -> str:
 def render_evidence_gallery(evidence: list[str], title: str) -> str:
     items = []
     for ref in evidence:
-        safe_ref = escape(ref)
+        safe_ref = escape(url_ref(ref))
         label = escape(Path(ref).name or ref)
         if is_image_reference(ref):
             items.append(
@@ -577,6 +648,117 @@ def force_list(value) -> list:
     if isinstance(value, list):
         return value
     return [value]
+
+
+def role_names(item: dict) -> list[str]:
+    roles = force_list(item.get("roles") or item.get("role") or item.get("user_role"))
+    return sorted({str(role).strip() for role in roles if str(role).strip()})
+
+
+def render_roles_overview(results: list[dict]) -> str:
+    roles = sorted({role for item in results for role in role_names(item)})
+    if not roles:
+        return ""
+    chips = render_role_chips(roles)
+    return (
+        '<div class="section-card roles-overview">'
+        "<h2>Detected Roles</h2>"
+        '<p class="muted">Roles captured from the executed cases and shown on each case row below.</p>'
+        f'<div class="meta-chips">{chips}</div>'
+        "</div>"
+    )
+
+
+def render_case_meta_chips(item: dict) -> str:
+    roles = render_role_chips(role_names(item), prefix="Roles: ")
+    requirements = ", ".join(force_list(item.get("requirement_ids"))) or "None"
+    return (
+        '<div class="meta-chips">'
+        f'<span class="chip">Requirements: {escape(requirements)}</span>'
+        f"{roles}"
+        "</div>"
+    )
+
+
+def render_role_chips(roles: list[str], prefix: str = "") -> str:
+    if not roles:
+        return '<span class="muted">Not specified</span>'
+    return "".join(f'<span class="chip role-chip">{escape(prefix + role)}</span>' for role in roles)
+
+
+def prepare_evidence_assets(results: list[dict], input_dir: Path, output_dir: Path) -> None:
+    evidence_dir = output_dir / "evidence"
+    copied: dict[Path, str] = {}
+    used_names: set[str] = set()
+    for item in results:
+        rewritten = []
+        for reference in force_list(item.get("evidence")):
+            ref = str(reference)
+            rewritten.append(copy_evidence_reference(ref, input_dir, output_dir, evidence_dir, copied, used_names))
+        if rewritten:
+            item["evidence"] = rewritten
+
+
+def copy_evidence_reference(
+    reference: str,
+    input_dir: Path,
+    output_dir: Path,
+    evidence_dir: Path,
+    copied: dict[Path, str],
+    used_names: set[str],
+) -> str:
+    if not reference or is_remote_reference(reference):
+        return reference
+
+    source = Path(reference).expanduser()
+    if not source.is_absolute():
+        candidate = input_dir / source
+        if candidate.exists():
+            source = candidate
+        elif (output_dir / source).exists():
+            return source.as_posix()
+        else:
+            return reference
+
+    if not source.exists() or not source.is_file():
+        return reference
+
+    resolved = source.resolve()
+    if resolved in copied:
+        return copied[resolved]
+
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    target_name = unique_evidence_name(source.name, used_names)
+    target = evidence_dir / target_name
+    if source.resolve() != target.resolve():
+        shutil.copy2(source, target)
+    relative = target.relative_to(output_dir).as_posix()
+    copied[resolved] = relative
+    return relative
+
+
+def unique_evidence_name(filename: str, used_names: set[str]) -> str:
+    path = Path(filename)
+    stem = path.stem or "evidence"
+    suffix = path.suffix
+    candidate = path.name or "evidence"
+    counter = 2
+    while candidate in used_names:
+        candidate = f"{stem}-{counter}{suffix}"
+        counter += 1
+    used_names.add(candidate)
+    return candidate
+
+
+def is_remote_reference(reference: str) -> bool:
+    parsed = urlparse(reference)
+    return parsed.scheme in {"http", "https", "data", "blob"}
+
+
+def url_ref(reference: str) -> str:
+    if is_remote_reference(reference):
+        return reference
+    return quote(reference, safe="/._-#%")
 
 
 def build_browser_context(result: dict) -> dict:

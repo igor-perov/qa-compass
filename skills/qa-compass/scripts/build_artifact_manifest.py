@@ -40,6 +40,12 @@ KNOWN_ARTIFACTS = {
         "created_by": "script_generated",
         "source_of_truth": False,
     },
+    "confluence-intake-diagnostics.json": {
+        "label": "Confluence intake diagnostics",
+        "description": "Non-sensitive diagnostics for Confluence folder/page discovery attempts and fallback results.",
+        "created_by": "script_generated",
+        "source_of_truth": False,
+    },
     "jira-issues.json": {
         "label": "Jira issues",
         "description": "Imported Jira issue payloads used as source material.",
@@ -192,19 +198,19 @@ KNOWN_ARTIFACTS = {
     },
     "qa-report.internal.pdf": {
         "label": "Internal QA report PDF",
-        "description": "PDF export of the detailed internal report.",
+        "description": "Experimental PDF export of the detailed internal report; HTML is the canonical output.",
         "created_by": "script_generated",
         "source_of_truth": False,
     },
     "qa-report.external.pdf": {
         "label": "External QA report PDF",
-        "description": "PDF export of the client-facing report.",
+        "description": "Experimental PDF export of the client-facing report; HTML is the canonical output.",
         "created_by": "script_generated",
         "source_of_truth": False,
     },
     "qa-report.pdf": {
         "label": "QA report PDF",
-        "description": "Legacy combined PDF QA report.",
+        "description": "Legacy experimental combined PDF QA report; HTML is the canonical output.",
         "created_by": "script_generated",
         "source_of_truth": False,
     },

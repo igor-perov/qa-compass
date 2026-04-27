@@ -6,13 +6,13 @@ Run the smallest useful subset first, gather strong evidence, and keep result st
 
 ## Standard Tool
 
-Browser execution and PDF export must use `playwright-cli`.
+Browser execution must use `playwright-cli`.
 
 Reusable Playwright `.spec.ts` files are optional starter artifacts. They are for reuse and refinement, not a replacement for `playwright-cli` execution inside this workflow.
 
 Execution should reuse canonical artifacts when possible. Prefer existing `test-cases.json`, `execution-progress.json`, and `remaining-cases.json` before regenerating cases or re-ingesting source material.
 
-Before live browser validation starts, generate `qa-scope-preview.html`, `qa-scope-preview.md`, and `qa-scope-preview.json` from the selected test cases and ask the user to confirm that the grouped scope, selected cases, full test-case link, and warnings look right.
+Before live browser validation starts, generate `qa-scope-preview.html`, `qa-scope-preview.md`, and `qa-scope-preview.json` from the selected test cases and ask the user to confirm that the grouped scope, selected cases, full test-case link, and warnings look right. Do not run the browser execution until the user confirms the scope, unless they already explicitly approved the selected cases in the same request.
 
 ```bash
 npm install -g @playwright/cli@latest
@@ -41,6 +41,7 @@ Blocked cases are not defects.
 Each executed case should capture:
 
 - test case id and title
+- role or roles covered by the case when known
 - environment
 - executed steps
 - status
@@ -71,6 +72,7 @@ A defect entry should include:
 - defect id
 - linked test case id
 - linked requirement ids
+- role or roles covered by the failed case when known
 - executed steps
 - expected result
 - actual result

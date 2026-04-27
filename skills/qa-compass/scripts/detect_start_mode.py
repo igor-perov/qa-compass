@@ -6,6 +6,9 @@ import re
 
 
 SOURCE_PATTERNS = {
+    "confluence_folder": (
+        "/folder/",
+    ),
     "jira": (
         "jira",
         "jql",
@@ -107,6 +110,9 @@ def detect_start_mode(user_text: str) -> dict:
 
 
 def detect_source_mode(lowered: str) -> str:
+    if re.search(r"/(?:wiki/)?spaces/[^/\s]+/folder/\d+", lowered):
+        return "confluence_folder"
+
     if has_any(lowered, SOURCE_PATTERNS["jira"]) and has_any(lowered, SOURCE_PATTERNS["confluence"]):
         return "jira_confluence"
 
@@ -227,7 +233,7 @@ def detect_playwright_specs_requested(lowered: str) -> bool:
 def detect_generation_scope_prompt_required(lowered: str, stage: str, source_mode: str) -> bool:
     if stage != "generate-cases":
         return False
-    if source_mode not in {"confluence", "jira", "jira_confluence", "requirements_json", "markdown", "pasted_text"}:
+    if source_mode not in {"confluence", "confluence_folder", "jira", "jira_confluence", "requirements_json", "markdown", "pasted_text"}:
         return False
     if has_any(
         lowered,
@@ -246,7 +252,7 @@ def detect_generation_scope_prompt_required(lowered: str, stage: str, source_mod
 
 def detect_missing_blockers(lowered: str, source_mode: str, stage: str) -> list[str]:
     blockers: list[str] = []
-    if source_mode == "confluence":
+    if source_mode in {"confluence", "confluence_folder"}:
         if not has_any(lowered, ("http://", "https://", "atlassian.net")):
             blockers.append("confluence_url")
         if "token" not in lowered:

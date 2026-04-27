@@ -15,6 +15,8 @@ Prefer reuse when the user wants to continue, rerun, report, draft defects, or e
 - `00-overview/project-summary.md`: product understanding to confirm the agent's interpretation.
 - `00-overview/artifact-manifest.json`: machine-readable artifact index.
 - `00-overview/artifact-legend.md`: human-readable file legend.
+- `01-sources/confluence-intake-diagnostics.json`: non-sensitive diagnostics for Confluence discovery attempts.
+- `01-sources/source-index.json`: cross-source map for imported source pages and relationships.
 - `02-normalized/requirements-normalized.json`: canonical requirements.
 - `02-normalized/roles.json`: detected role layer.
 - `02-normalized/grouping-proposal.json`: grouping options and selected grouping.
@@ -44,3 +46,4 @@ If a user asks to continue a previous run, inspect the manifest and prefer the m
 - scope confirmation request: start from `test-cases.json`, `execution-subset.json`, `roles.json`, and `grouping-proposal.json`
 - defect draft request: start from failed cases in `execution-results.json`
 - coverage update: start from `requirements-normalized.json` and existing `test-cases.json`
+- Confluence folder failure: inspect `01-sources/confluence-intake-diagnostics.json` and continue with connector/search/export fallback instead of retrying the same page fetch.
