@@ -30,6 +30,7 @@ def draft_jira_bugs(input_path: str, output_dir: str) -> dict:
 
 def build_draft(index: int, result: dict, payload: dict) -> dict:
     failure = result.get("failure_details") or "Failed behavior was observed during QA execution."
+    expected_results = force_list(result.get("expected_results") or result.get("expected_result"))
     return {
         "draft_id": f"BUG-{index:03d}",
         "summary": f"{result.get('title', 'Failed QA case')} fails in {payload.get('environment', result.get('environment', 'target environment'))}",
@@ -39,8 +40,12 @@ def build_draft(index: int, result: dict, payload: dict) -> dict:
         "linked_test_case_id": result.get("test_case_id", ""),
         "requirement_ids": result.get("requirement_ids", []),
         "steps_to_reproduce": result.get("executed_steps", []),
-        "expected_result": "Behavior should match the linked requirement and test case expected result.",
-        "actual_result": failure,
+        "expected_result": "\n".join(expected_results) or "Behavior should match the linked requirement and test case expected result.",
+        "actual_result": result.get("actual_result") or failure,
+        "console_errors": force_list(result.get("console_errors")),
+        "network_errors": force_list(result.get("network_errors")),
+        "browser_context": build_browser_context(result),
+        "diagnostic_details": result.get("diagnostic_details", {}),
         "evidence": result.get("evidence", []),
         "notes": result.get("notes", []),
     }
@@ -76,6 +81,18 @@ def render_drafts_markdown(drafts: list[dict]) -> str:
                     "### Actual Result",
                     draft["actual_result"],
                     "",
+                    "### Console Errors",
+                    render_bullets(draft["console_errors"], "No console errors captured."),
+                    "",
+                    "### Network / API Errors",
+                    render_bullets(draft["network_errors"], "No network or API errors captured."),
+                    "",
+                    "### Browser Context",
+                    render_mapping(draft["browser_context"], "No browser context captured."),
+                    "",
+                    "### Diagnostic Details",
+                    render_mapping(draft["diagnostic_details"], "No extra diagnostic details captured."),
+                    "",
                     "### Evidence",
                     render_bullets(draft["evidence"], "No evidence paths captured."),
                     "",
@@ -101,7 +118,51 @@ def render_numbered(items: list[str]) -> str:
 def render_bullets(items: list[str], empty_text: str) -> str:
     if not items:
         return empty_text
-    return "\n".join(f"- `{item}`" for item in items)
+    return "\n".join(f"- `{format_value(item)}`" for item in items)
+
+
+def render_mapping(items: dict, empty_text: str) -> str:
+    if not items:
+        return empty_text
+    return "\n".join(f"- `{key}`: `{format_value(value)}`" for key, value in items.items() if value not in (None, "", [], {}))
+
+
+def force_list(value) -> list:
+    if value in (None, ""):
+        return []
+    if isinstance(value, list):
+        return value
+    return [value]
+
+
+def build_browser_context(result: dict) -> dict:
+    context = result.get("browser_context") or {}
+    if not isinstance(context, dict):
+        return {"details": context}
+
+    aliases = {
+        "current_url": ("current_url", "page_url", "url"),
+        "browser": ("browser", "browser_name"),
+        "viewport": ("viewport", "viewport_size"),
+        "role": ("role", "user_role"),
+        "account": ("account", "test_account"),
+    }
+    merged = {key: value for key, value in context.items() if value not in (None, "", [], {})}
+    for canonical, keys in aliases.items():
+        if canonical in merged:
+            continue
+        for key in keys:
+            value = result.get(key)
+            if value not in (None, "", [], {}):
+                merged[canonical] = value
+                break
+    return merged
+
+
+def format_value(value) -> str:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False, sort_keys=True)
+    return str(value)
 
 
 def main() -> None:

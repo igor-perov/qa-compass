@@ -45,6 +45,11 @@ class DetectStartModeTests(unittest.TestCase):
         self.assertEqual(payload["stage"], "execute")
         self.assertIn("environment_url", payload["missing_blockers"])
 
+    def test_detects_scope_preview_request(self):
+        payload = detect_start_mode("Build a scope preview so I can confirm cases before execution")
+        self.assertEqual(payload["stage"], "scope-preview")
+        self.assertEqual(payload["requested_output"], "scope_preview")
+
     def test_detects_jira_source_request(self):
         payload = detect_start_mode("Use Jira Ready for QA issues and generate test cases")
         self.assertEqual(payload["source_mode"], "jira")

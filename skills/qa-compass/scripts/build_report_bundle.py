@@ -35,7 +35,13 @@ def classify_defects(results: list[dict]) -> list[dict]:
                 "title": result.get("title", "Unnamed failed case"),
                 "requirement_ids": result.get("requirement_ids", []),
                 "executed_steps": result.get("executed_steps", []),
+                "expected_results": force_list(result.get("expected_results") or result.get("expected_result")),
+                "actual_result": result.get("actual_result", ""),
                 "failure_details": result.get("failure_details", ""),
+                "console_errors": force_list(result.get("console_errors")),
+                "network_errors": force_list(result.get("network_errors")),
+                "browser_context": build_browser_context(result),
+                "diagnostic_details": result.get("diagnostic_details", {}),
                 "notes": result.get("notes", []),
                 "evidence": evidence,
                 "primary_screenshot": first_image_reference(evidence),
@@ -56,6 +62,7 @@ def build_report_bundle(input_path: str, output_dir: str) -> dict:
         "run_date": payload.get("run_date", ""),
         "environment": payload.get("environment", ""),
         "subset_mode": payload.get("subset_mode", "custom"),
+        "grouping_strategy": infer_grouping_strategy(payload, results),
         "requirements_count": payload.get("requirements_count", 0),
         "test_cases_count": payload.get("test_cases_count", len(results)),
         "results": results,
@@ -88,6 +95,7 @@ def build_run_summary(report_input: dict) -> dict:
         "run_date": report_input["run_date"],
         "environment": report_input["environment"],
         "subset_mode": report_input["subset_mode"],
+        "grouping_strategy": report_input["grouping_strategy"],
         "counts": report_input["counts"],
         "defects": report_input["defects"],
         "blocked_cases": [
@@ -177,7 +185,8 @@ def render_html_report(report_input: dict) -> str:
             "defect_count": len(report_input["defects"]),
             "blocked_case_count": len(report_input["blocked_cases"]),
             "pie_chart_style": build_pie_chart_style(counts),
-            "results_rows": render_results_rows(report_input["results"]),
+            "grouping_label": escape(grouping_label(report_input["grouping_strategy"])),
+            "results_sections": render_results_sections(report_input["results"], report_input["grouping_strategy"]),
             "blocked_cases_section": render_blocked_section(report_input["blocked_cases"]),
             "defect_section": render_defect_section(report_input["defects"]),
             "evidence_panels": render_evidence_panels(report_input["results"]),
@@ -188,7 +197,7 @@ def render_html_report(report_input: dict) -> str:
 def render_internal_html_report(report_input: dict, output_dir: Path | None = None) -> str:
     html = render_html_report(report_input)
     legend = render_artifact_details(output_dir)
-    return html.replace('<div class="container">', f'<div class="container">\n{legend}', 1)
+    return html.replace('    <div class="dashboard">', f"{legend}\n\n    <div class=\"dashboard\">", 1)
 
 
 def render_external_html_report(report_input: dict) -> str:
@@ -205,6 +214,7 @@ def render_external_html_report(report_input: dict) -> str:
             "failed_count": counts["failed"],
             "blocked_count": counts["blocked"],
             "defect_count": len(report_input["defects"]),
+            "pie_chart_style": build_pie_chart_style(counts),
             "external_defect_summary": render_external_defect_summary(report_input["defects"]),
             "external_blocker_summary": render_external_blocker_summary(report_input["blocked_cases"]),
         },
@@ -218,7 +228,7 @@ def render_artifact_details(output_dir: Path | None = None) -> str:
         for path, description in artifacts
     )
     return (
-        '<details class="section-card">'
+        '<details class="section-card artifact-legend">'
         "<summary><strong>Generated files and artifact legend</strong></summary>"
         f"<ul>{rows}</ul>"
         "</details>"
@@ -276,14 +286,107 @@ def render_results_rows(results: list[dict]) -> str:
     for item in results:
         rows.append(
             "<tr>"
-            f"<td>{escape(item.get('test_case_id', ''))}</td>"
-            f"<td>{escape(item.get('title', ''))}</td>"
-            f"<td>{escape(item.get('priority', 'Medium'))}</td>"
-            f"<td>{escape(item.get('duration', '-'))}</td>"
-            f"<td><span class=\"status {escape(item.get('status', 'Unknown'))}\">{escape(item.get('status', 'Unknown'))}</span></td>"
+            f"<td data-label=\"ID\">{escape(item.get('test_case_id', ''))}</td>"
+            f"<td data-label=\"Title\">{escape(item.get('title', ''))}</td>"
+            f"<td data-label=\"Priority\">{escape(item.get('priority', 'Medium'))}</td>"
+            f"<td data-label=\"Time\">{escape(item.get('duration', '-'))}</td>"
+            f"<td data-label=\"Status\"><span class=\"status {escape(item.get('status', 'Unknown'))}\">{escape(item.get('status', 'Unknown'))}</span></td>"
             "</tr>"
         )
     return "\n".join(rows)
+
+
+def render_results_sections(results: list[dict], grouping_strategy: str) -> str:
+    groups = group_results(results, grouping_strategy)
+    sections = []
+    for group_name, group_results_list in groups:
+        rows = render_results_rows(group_results_list)
+        count_label = "case" if len(group_results_list) == 1 else "cases"
+        sections.append(
+            "<section class=\"execution-group\">"
+            "<div class=\"execution-group-head\">"
+            f"<h3>{escape(group_name)}</h3>"
+            f"<span>{len(group_results_list)} {count_label}</span>"
+            "</div>"
+            "<table>"
+            "<thead><tr><th>ID</th><th>Title</th><th>Priority</th><th>Time</th><th>Status</th></tr></thead>"
+            f"<tbody>{rows}</tbody>"
+            "</table>"
+            "</section>"
+        )
+    return "\n".join(sections)
+
+
+def group_results(results: list[dict], grouping_strategy: str) -> list[tuple[str, list[dict]]]:
+    grouped: dict[str, list[dict]] = {}
+    for item in results:
+        for group_name in result_group_names(item, grouping_strategy):
+            grouped.setdefault(group_name, []).append(item)
+    return sorted(grouped.items(), key=lambda entry: entry[0].lower())
+
+
+def result_group_names(item: dict, grouping_strategy: str) -> list[str]:
+    value = item.get(grouping_field(grouping_strategy))
+    if grouping_strategy == "module" and not value:
+        value = item.get("feature")
+    if grouping_strategy == "custom" and not value:
+        value = item.get("custom_group") or item.get("group")
+    if grouping_strategy == "role" and not value:
+        value = item.get("roles")
+
+    values = force_list(value)
+    names = [str(entry).strip() for entry in values if str(entry).strip()]
+    return names or ["Ungrouped"]
+
+
+def grouping_field(grouping_strategy: str) -> str:
+    fields = {
+        "feature": "feature",
+        "module": "module",
+        "role": "role",
+        "source_section": "source_section",
+        "jira_epic": "jira_epic",
+        "jira_component": "jira_component",
+        "custom": "group",
+    }
+    return fields.get(grouping_strategy, "feature")
+
+
+def infer_grouping_strategy(payload: dict, results: list[dict]) -> str:
+    strategy = str(payload.get("grouping_strategy") or "").strip().lower()
+    if strategy:
+        return normalize_grouping_strategy(strategy)
+    if any(str(item.get("feature", "")).strip() for item in results):
+        return "feature"
+    return "custom"
+
+
+def normalize_grouping_strategy(strategy: str) -> str:
+    aliases = {
+        "features": "feature",
+        "product_feature": "feature",
+        "product module": "module",
+        "modules": "module",
+        "roles": "role",
+        "source": "source_section",
+        "section": "source_section",
+        "epic": "jira_epic",
+        "component": "jira_component",
+    }
+    return aliases.get(strategy, strategy)
+
+
+def grouping_label(grouping_strategy: str) -> str:
+    labels = {
+        "feature": "Grouped by Feature",
+        "module": "Grouped by Module",
+        "role": "Grouped by Role",
+        "source_section": "Grouped by Source Section",
+        "jira_epic": "Grouped by Jira Epic",
+        "jira_component": "Grouped by Jira Component",
+        "custom": "Grouped by Custom Scope",
+    }
+    return labels.get(grouping_strategy, "Grouped by Feature")
 
 
 def render_blocked_section(blocked_cases: list[dict]) -> str:
@@ -323,10 +426,16 @@ def render_defect_section(defects: list[dict]) -> str:
             f"<span class=\"chip\">Requirements: {escape(', '.join(defect['requirement_ids']) or 'None')}</span>"
             "</div>"
             f"<p class=\"issue-summary\">{escape(defect['failure_details'] or 'Failure details were not captured.')}</p>"
+            f"{render_detail_list_block('Expected result', defect.get('expected_results', []))}"
+            f"{render_detail_text_block('Actual result', defect.get('actual_result', ''))}"
             "<div class=\"detail-block\">"
             "<span class=\"detail-label\">Executed steps</span>"
             f"{render_step_list(defect['executed_steps'])}"
             "</div>"
+            f"{render_diagnostic_list_block('Console errors', defect.get('console_errors', []))}"
+            f"{render_diagnostic_list_block('Network / API errors', defect.get('network_errors', []))}"
+            f"{render_context_block('Browser context', defect.get('browser_context', {}))}"
+            f"{render_context_block('Diagnostic details', defect.get('diagnostic_details', {}))}"
             f"{render_notes_block(defect.get('notes', []))}"
             f"{render_evidence_block(defect['evidence'])}"
             "</article>"
@@ -357,6 +466,65 @@ def render_step_list(steps: list[str]) -> str:
         return '<div class="muted">No executed steps were recorded.</div>'
     items = "".join(f"<li>{escape(step)}</li>" for step in steps)
     return f"<ol class=\"step-list\">{items}</ol>"
+
+
+def render_detail_text_block(label: str, value: str) -> str:
+    if not value:
+        return ""
+    return (
+        "<div class=\"detail-block\">"
+        f"<span class=\"detail-label\">{escape(label)}</span>"
+        f"<p class=\"detail-text\">{escape(str(value))}</p>"
+        "</div>"
+    )
+
+
+def render_detail_list_block(label: str, values: list) -> str:
+    values = force_list(values)
+    if not values:
+        return ""
+    items = "".join(f"<li>{escape(format_diagnostic_item(value))}</li>" for value in values)
+    return (
+        "<div class=\"detail-block\">"
+        f"<span class=\"detail-label\">{escape(label)}</span>"
+        f"<ul class=\"note-list\">{items}</ul>"
+        "</div>"
+    )
+
+
+def render_diagnostic_list_block(label: str, values: list) -> str:
+    values = force_list(values)
+    if not values:
+        return ""
+    items = "".join(f"<li>{escape(format_diagnostic_item(value))}</li>" for value in values)
+    return (
+        "<div class=\"detail-block\">"
+        f"<span class=\"detail-label\">{escape(label)}</span>"
+        f"<ul class=\"diagnostic-list\">{items}</ul>"
+        "</div>"
+    )
+
+
+def render_context_block(label: str, context: dict | list | str) -> str:
+    if not context:
+        return ""
+    if isinstance(context, dict):
+        rows = [
+            f"<li><strong>{escape(str(key))}:</strong> {escape(format_diagnostic_item(value))}</li>"
+            for key, value in context.items()
+            if value not in (None, "", [], {})
+        ]
+        if not rows:
+            return ""
+        body = "".join(rows)
+    else:
+        body = "".join(f"<li>{escape(format_diagnostic_item(value))}</li>" for value in force_list(context))
+    return (
+        "<div class=\"detail-block\">"
+        f"<span class=\"detail-label\">{escape(label)}</span>"
+        f"<ul class=\"diagnostic-list\">{body}</ul>"
+        "</div>"
+    )
 
 
 def render_notes_block(notes: list[str]) -> str:
@@ -401,6 +569,44 @@ def render_evidence_gallery(evidence: list[str], title: str) -> str:
                 "</div>"
             )
     return f"<div class=\"evidence-gallery\">{''.join(items)}</div>"
+
+
+def force_list(value) -> list:
+    if value in (None, ""):
+        return []
+    if isinstance(value, list):
+        return value
+    return [value]
+
+
+def build_browser_context(result: dict) -> dict:
+    context = result.get("browser_context") or {}
+    if not isinstance(context, dict):
+        return {"details": context}
+
+    aliases = {
+        "current_url": ("current_url", "page_url", "url"),
+        "browser": ("browser", "browser_name"),
+        "viewport": ("viewport", "viewport_size"),
+        "role": ("role", "user_role"),
+        "account": ("account", "test_account"),
+    }
+    merged = {key: value for key, value in context.items() if value not in (None, "", [], {})}
+    for canonical, keys in aliases.items():
+        if canonical in merged:
+            continue
+        for key in keys:
+            value = result.get(key)
+            if value not in (None, "", [], {}):
+                merged[canonical] = value
+                break
+    return merged
+
+
+def format_diagnostic_item(value) -> str:
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False, sort_keys=True)
+    return str(value)
 
 
 def build_pie_chart_style(counts: dict) -> str:

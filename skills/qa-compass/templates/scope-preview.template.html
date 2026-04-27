@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QA Scope Preview - $project_name</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --soft: #fbfcfe;
+      --border: #e4e9f1;
+      --text: #172033;
+      --muted: #667085;
+      --accent: #3157b8;
+      --ok: #20a464;
+      --warn: #d9822b;
+      --shadow: 0 16px 42px rgba(22, 34, 51, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 36px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", "Segoe UI", sans-serif;
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 36px;
+      border-radius: 18px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 12px 0 8px;
+      font-size: 34px;
+      line-height: 1.1;
+    }
+
+    .subtitle {
+      max-width: 660px;
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .meta-grid {
+      min-width: 340px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .meta-card,
+    .metric-card,
+    .section,
+    .scope-group {
+      border: 1px solid var(--border);
+      background: var(--soft);
+      border-radius: 14px;
+    }
+
+    .meta-card {
+      padding: 14px 16px;
+    }
+
+    .label {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .value {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .metric-card {
+      min-height: 116px;
+      padding: 18px;
+      text-align: center;
+    }
+
+    .metric-card strong {
+      display: block;
+      margin-top: 8px;
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .section {
+      margin-top: 24px;
+      padding: 22px;
+      background: #fdfdfd;
+    }
+
+    .section h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #344054;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .muted-chip {
+      background: #f2f4f7;
+      color: var(--muted);
+    }
+
+    .artifact-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .artifact-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .secondary-link {
+      background: #f2f4f7;
+      color: #344054;
+    }
+
+    .ready-state {
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: #eafaf1;
+      color: #157348;
+      font-weight: 800;
+    }
+
+    .warning-state {
+      margin-bottom: 12px;
+      background: #fff5e8;
+      color: #9a5b13;
+    }
+
+    .warning-list {
+      margin: 0;
+      padding-left: 20px;
+      color: #7a4b16;
+      line-height: 1.7;
+    }
+
+    .scope-group {
+      margin-top: 16px;
+      padding: 18px;
+      background: white;
+    }
+
+    .scope-group-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .scope-group-head h3 {
+      margin: 0 0 4px;
+      font-size: 19px;
+    }
+
+    .scope-group-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .scope-group-head span {
+      flex: 0 0 auto;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .group-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .case-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .case-row {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr) minmax(240px, 0.7fr);
+      gap: 12px;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--soft);
+      font-size: 13px;
+    }
+
+    .case-id {
+      color: var(--muted);
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .case-title {
+      font-weight: 800;
+    }
+
+    .case-tags {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+    }
+
+    .case-tags b,
+    .case-tags em,
+    .case-tags small {
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #eef4ff;
+      font-size: 11px;
+      font-style: normal;
+      font-weight: 800;
+    }
+
+    .empty-state {
+      padding: 16px;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--muted);
+      background: white;
+    }
+
+    @media (max-width: 900px) {
+      body { padding: 12px; }
+      .container { padding: 16px; border-radius: 10px; }
+      .header { display: block; }
+      .meta-grid { min-width: 0; margin-top: 16px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .case-row { grid-template-columns: 1fr; align-items: start; }
+      .case-tags { justify-content: flex-start; }
+      h1 { font-size: 28px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="header">
+      <div>
+        <span class="eyebrow">QA Scope Preview</span>
+        <h1>$project_name</h1>
+        <p class="subtitle">Pre-execution review of the exact test scope, grouping, and coverage signals that will be used before browser validation starts.</p>
+      </div>
+      <div class="meta-grid">
+        <div class="meta-card">
+          <span class="label">Source</span>
+          <span class="value">$source_mode</span>
+        </div>
+        <div class="meta-card">
+          <span class="label">Subset</span>
+          <span class="value">$subset_mode</span>
+        </div>
+        <div class="meta-card">
+          <span class="label">Grouping</span>
+          <span class="value">$grouping_label</span>
+        </div>
+        <div class="meta-card">
+          <span class="label">Decision</span>
+          <span class="value">Confirm before execution</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="metrics">
+      <div class="metric-card"><span class="label">Selected Cases</span><strong>$selected_cases</strong></div>
+      <div class="metric-card"><span class="label">Total Cases</span><strong>$total_cases</strong></div>
+      <div class="metric-card"><span class="label">Requirements</span><strong>$requirements_covered</strong></div>
+      <div class="metric-card"><span class="label">Groups</span><strong>$groups_count</strong></div>
+    </section>
+
+    <section class="section">
+      <h2>Execution Readiness</h2>
+      $warnings_section
+    </section>
+
+    <section class="section">
+      <h2>Scope By Group</h2>
+      <div class="section-kicker">$grouping_label</div>
+      $artifact_links_section
+      <div class="chip-row" style="margin: 14px 0;">$priority_chips$type_chips</div>
+      $groups_section
+    </section>
+  </main>
+</body>
+</html>

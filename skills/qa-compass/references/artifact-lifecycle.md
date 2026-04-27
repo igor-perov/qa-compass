@@ -22,6 +22,9 @@ Prefer reuse when the user wants to continue, rerun, report, draft defects, or e
 - `03-generated/traceability.json`: requirement to test-case mapping.
 - `03-generated/reusable-test-plan.md`: compact plan for future runs.
 - `03-generated/playwright-specs/`: optional starter Playwright automation files.
+- `04-execution/qa-scope-preview.html`: pre-execution review of selected scope, groups, warnings, selected cases, and full test-case links.
+- `04-execution/qa-scope-preview.json`: machine-readable scope preview payload.
+- `04-execution/qa-scope-preview.md`: readable scope preview summary.
 - `04-execution/execution-progress.json`: completed, skipped, blocked, and remaining execution state.
 - `04-execution/remaining-cases.json`: cases suitable for a later continuation run.
 - `05-reports/run-summary.json`: summary metrics and defect/blocker state.
@@ -38,6 +41,6 @@ If a user asks to continue a previous run, inspect the manifest and prefer the m
 
 - report request: start from `execution-results.json` or `run-summary.json`
 - rerun request: start from `remaining-cases.json`, `execution-progress.json`, or `test-cases.json`
+- scope confirmation request: start from `test-cases.json`, `execution-subset.json`, `roles.json`, and `grouping-proposal.json`
 - defect draft request: start from failed cases in `execution-results.json`
 - coverage update: start from `requirements-normalized.json` and existing `test-cases.json`
-

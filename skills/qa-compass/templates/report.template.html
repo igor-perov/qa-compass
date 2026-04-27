@@ -128,7 +128,7 @@
 
     .summary-cards {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 16px;
     }
 
@@ -249,6 +249,10 @@
       margin-top: 24px;
     }
 
+    .artifact-legend {
+      margin-bottom: 24px;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -269,6 +273,50 @@
       text-transform: uppercase;
       letter-spacing: 0.08em;
       font-weight: 700;
+    }
+
+    .section-kicker {
+      margin: -6px 0 18px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .execution-group {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid var(--border);
+    }
+
+    .execution-group:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .execution-group-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .execution-group-head h3 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.3;
+    }
+
+    .execution-group-head span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
     }
 
     .status {
@@ -300,11 +348,45 @@
       color: #b96c0b;
     }
 
-    .split-sections {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
+    .issue-details {
       margin-top: 24px;
+    }
+
+    .issue-details summary {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      list-style: none;
+    }
+
+    .issue-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .issue-details summary::after {
+      content: "";
+      flex: 0 0 auto;
+      width: 10px;
+      height: 10px;
+      border-right: 2px solid #3358b3;
+      border-bottom: 2px solid #3358b3;
+      margin-right: 4px;
+      transform: rotate(45deg);
+      transition: transform 160ms ease;
+    }
+
+    .issue-details[open] summary::after {
+      transform: rotate(-135deg);
+    }
+
+    .issue-details h2 {
+      margin: 0;
+    }
+
+    .issue-list {
+      margin-top: 18px;
     }
 
     .issue-card,
@@ -386,12 +468,25 @@
       font-weight: 700;
     }
 
+    .detail-text {
+      margin: 0;
+      color: #344054;
+      line-height: 1.6;
+    }
+
     .step-list,
-    .note-list {
+    .note-list,
+    .diagnostic-list {
       margin: 0;
       padding-left: 20px;
       color: #344054;
       line-height: 1.7;
+    }
+
+    .diagnostic-list {
+      font-family: "SFMono-Regular", "Consolas", monospace;
+      font-size: 12px;
+      word-break: break-word;
     }
 
     .muted {
@@ -442,16 +537,18 @@
 
     @media (max-width: 980px) {
       body {
-        padding: 20px;
+        padding: 12px;
       }
 
       .container {
-        padding: 24px;
+        max-width: 100%;
+        padding: 16px;
+        border-radius: 10px;
+        overflow: hidden;
       }
 
       .header,
       .dashboard,
-      .split-sections,
       .evidence-grid {
         display: block;
       }
@@ -462,9 +559,63 @@
         grid-template-columns: 1fr;
       }
 
+      .meta-grid {
+        min-width: 0;
+        margin-top: 14px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .pie-chart {
+        width: 220px;
+        height: 220px;
+      }
+
+      .pie-chart-center {
+        inset: 44px;
+      }
+
       .chart-card,
       .section-card {
         margin-top: 20px;
+      }
+
+      table,
+      thead,
+      tbody,
+      tr,
+      th,
+      td {
+        display: block;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tr {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      td {
+        display: grid;
+        grid-template-columns: 92px minmax(0, 1fr);
+        gap: 12px;
+        padding: 7px 0;
+        border-bottom: 0;
+        word-break: break-word;
+      }
+
+      td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
       }
     }
   </style>
@@ -519,16 +670,6 @@
           <div class="value" style="color: var(--blocked);">$blocked_count</div>
           <div class="hint">External blockers or access gaps</div>
         </div>
-        <div class="card">
-          <h3>Defects</h3>
-          <div class="value">$defect_count</div>
-          <div class="hint">Confirmed defect cards created</div>
-        </div>
-        <div class="card">
-          <h3>Blocked Cases</h3>
-          <div class="value">$blocked_case_count</div>
-          <div class="hint">Cases awaiting follow-up</div>
-        </div>
       </div>
 
       <div class="chart-card">
@@ -552,32 +693,23 @@
 
     <div class="section-card">
       <h2>Execution Details</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Priority</th>
-            <th>Time</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          $results_rows
-        </tbody>
-      </table>
+      <div class="section-kicker">$grouping_label</div>
+      $results_sections
     </div>
 
-    <div class="split-sections">
-      <div class="section-card">
-        <h2>Blocked Cases</h2>
+    <details class="section-card issue-details">
+      <summary><h2>Blocked Cases</h2></summary>
+      <div class="issue-list">
         $blocked_cases_section
       </div>
-      <div class="section-card">
-        <h2>Confirmed Defects</h2>
+    </details>
+
+    <details class="section-card issue-details">
+      <summary><h2>Confirmed Defects</h2></summary>
+      <div class="issue-list">
         $defect_section
       </div>
-    </div>
+    </details>
 
     <div class="section-card">
       <h2>Evidence Gallery</h2>

@@ -6,6 +6,14 @@ Produce a stakeholder-ready report that quickly shows scope, quality, blockers, 
 
 ## Required Outputs
 
+Pre-execution scope review:
+
+- `qa-scope-preview.html`
+- `qa-scope-preview.md`
+- `qa-scope-preview.json`
+
+Post-execution reporting:
+
 - `execution-plan.md`
 - `execution-results.md`
 - `run-summary.json`
@@ -16,14 +24,23 @@ Produce a stakeholder-ready report that quickly shows scope, quality, blockers, 
 
 ## HTML/PDF Quality Bar
 
+The scope preview should make the upcoming execution easy to approve before testing starts:
+
+- selected versus total test cases
+- grouping strategy and grouped scope sections
+- priority and type mix
+- compact selected-case list by group
+- link to the full `test-cases.json` source for detailed case review
+- warnings for missing requirement links, missing expected results, missing role attachment, or excluded cases
+
 The internal report should be visibly stronger than a raw dump. Prefer:
 
 - a clean default visual style with an executive header and environment metadata
 - summary cards
 - a pie chart near the top for pass / fail / blocked distribution
-- execution results table with case ID, title, priority, duration, and status
+- execution results grouped by the confirmed grouping strategy, with case ID, title, priority, duration, and status
 - blocked section
-- defect section with executed steps and failure summary
+- defect section with failure summary, expected result, actual result, executed steps, diagnostics, and evidence
 - evidence panels or screenshot references
 - an expandable generated-files legend near the top
 
@@ -47,7 +64,12 @@ For each defect include:
 - linked test case
 - linked requirement ids
 - steps executed
+- expected result
+- actual result
 - failure description
+- console errors if captured
+- network or API errors if captured
+- browser context if relevant
 - screenshot path if available
 - evidence reference if available
 

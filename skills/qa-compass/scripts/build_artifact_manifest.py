@@ -124,6 +124,24 @@ KNOWN_ARTIFACTS = {
         "created_by": "script_generated",
         "source_of_truth": True,
     },
+    "qa-scope-preview.html": {
+        "label": "QA scope preview",
+        "description": "Pre-execution HTML review of selected scope, groups, roles, warnings, and test cases.",
+        "created_by": "script_generated",
+        "source_of_truth": False,
+    },
+    "qa-scope-preview.md": {
+        "label": "Readable QA scope preview",
+        "description": "Markdown summary of the selected execution scope before testing starts.",
+        "created_by": "script_generated",
+        "source_of_truth": False,
+    },
+    "qa-scope-preview.json": {
+        "label": "QA scope preview payload",
+        "description": "Machine-readable pre-execution scope review payload.",
+        "created_by": "script_generated",
+        "source_of_truth": True,
+    },
     "execution-results.json": {
         "label": "Execution results",
         "description": "Machine-readable execution results.",

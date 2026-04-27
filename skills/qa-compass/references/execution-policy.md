@@ -12,6 +12,8 @@ Reusable Playwright `.spec.ts` files are optional starter artifacts. They are fo
 
 Execution should reuse canonical artifacts when possible. Prefer existing `test-cases.json`, `execution-progress.json`, and `remaining-cases.json` before regenerating cases or re-ingesting source material.
 
+Before live browser validation starts, generate `qa-scope-preview.html`, `qa-scope-preview.md`, and `qa-scope-preview.json` from the selected test cases and ask the user to confirm that the grouped scope, selected cases, full test-case link, and warnings look right.
+
 ```bash
 npm install -g @playwright/cli@latest
 playwright-cli --help
@@ -42,9 +44,14 @@ Each executed case should capture:
 - environment
 - executed steps
 - status
+- expected result for failed cases
+- actual result for failed cases
 - notes
 - screenshot path when meaningful
 - log references when useful
+- console errors when visible
+- network or API errors when visible
+- browser context when useful: URL, browser, viewport, role, test account
 - failure details for `Failed`
 - blocker details for `Blocked`
 
@@ -65,7 +72,12 @@ A defect entry should include:
 - linked test case id
 - linked requirement ids
 - executed steps
+- expected result
+- actual result
 - failure summary
+- console errors when captured
+- network or API errors when captured
+- browser context when relevant
 - screenshot or evidence reference
 
 ## Continuation Artifacts

@@ -36,12 +36,19 @@ class DraftJiraBugsTests(unittest.TestCase):
             self.assertEqual(draft["environment"], "https://develop.example.test")
             self.assertEqual(draft["priority"], "High")
             self.assertIn("Open the landing page", draft["steps_to_reproduce"])
-            self.assertIn("public email domain", draft["actual_result"])
+            self.assertIn("Public email domains are rejected", draft["expected_result"])
+            self.assertIn("Continue button became active", draft["actual_result"])
+            self.assertIn("ValidationPolicyError", draft["console_errors"][0])
+            self.assertIn("POST /api/signup/validate-email", draft["network_errors"][0])
+            self.assertEqual(draft["browser_context"]["browser"], "Chrome")
             self.assertIn("evidence/public-email-failure.png", draft["evidence"])
 
             markdown = md_path.read_text(encoding="utf-8")
             self.assertIn("Draft BUG-001", markdown)
             self.assertIn("TC-AUTH-ERR-001", markdown)
+            self.assertIn("Console Errors", markdown)
+            self.assertIn("Network / API Errors", markdown)
+            self.assertIn("Browser Context", markdown)
             self.assertIn("evidence/public-email-failure.png", markdown)
 
 

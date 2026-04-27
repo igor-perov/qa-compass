@@ -64,6 +64,15 @@ STAGE_PATTERNS = {
         "playwright test files",
         "reusable playwright",
     ),
+    "scope-preview": (
+        "scope preview",
+        "pre-execution",
+        "pre execution",
+        "confirm scope",
+        "review scope",
+        "before execution",
+        "before testing",
+    ),
     "execute": ("run", "rerun", "execute", "validate", "smoke", "high-priority", "high priority"),
     "generate-cases": (
         "test case",
@@ -149,6 +158,18 @@ def detect_stage(lowered: str) -> str:
                 "reusable playwright",
             ),
         ),
+        (
+            "scope-preview",
+            (
+                "scope preview",
+                "pre-execution",
+                "pre execution",
+                "confirm scope",
+                "review scope",
+                "before execution",
+                "before testing",
+            ),
+        ),
         ("execute", ("run the top", "run ", "rerun", "execute", "smoke", "high-priority", "high priority")),
         ("ingest", ("pull", "fetch", "parse", "import", "grab")),
     )
@@ -178,6 +199,8 @@ def detect_requested_output(lowered: str, stage: str, playwright_specs_requested
         return "test_cases"
     if stage == "export-playwright-specs":
         return "playwright_specs"
+    if stage == "scope-preview":
+        return "scope_preview"
     if stage == "normalize":
         return "normalized_requirements"
     if stage == "execute":

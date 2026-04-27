@@ -11,6 +11,7 @@ QA Compass can help with:
 - detecting roles and proposing grouping
 - generating requirement-driven test cases
 - selecting execution subsets
+- generating a pre-execution scope preview for user confirmation
 - validating flows with `playwright-cli`
 - creating internal and external QA reports
 - drafting Jira-ready bug reports from confirmed defects
@@ -23,6 +24,7 @@ QA Compass can help with:
 - `propose-grouping`
 - `generate-cases`
 - `export-playwright-specs`
+- `scope-preview`
 - `execute`
 - `report`
 - `draft-defects`

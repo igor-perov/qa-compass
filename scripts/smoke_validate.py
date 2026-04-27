@@ -73,6 +73,7 @@ def main() -> None:
         tmp_root = Path(tmpdir)
         report_dir = tmp_root / "report"
         spec_dir = tmp_root / "playwright-specs"
+        preview_dir = tmp_root / "scope-preview"
 
         run(
             [
@@ -118,6 +119,17 @@ def main() -> None:
             ]
         )
 
+        run(
+            [
+                sys.executable,
+                str(FLAGSHIP_ROOT / "scripts" / "build_scope_preview.py"),
+                "--test-cases",
+                str(tmp_root / "test-cases.json"),
+                "--output-dir",
+                str(preview_dir),
+            ]
+        )
+
         if args.with_pdf:
             run(
                 [
@@ -131,6 +143,7 @@ def main() -> None:
                 ]
             )
         print(f"Smoke validation artifacts: {report_dir}")
+        print(f"Generated scope preview: {preview_dir}")
         print(f"Generated starter specs: {spec_dir}")
 
 

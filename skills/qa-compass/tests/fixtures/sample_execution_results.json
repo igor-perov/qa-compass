@@ -3,6 +3,7 @@
   "run_date": "2026-03-23",
   "environment": "https://develop.example.test",
   "subset_mode": "high-priority",
+  "grouping_strategy": "feature",
   "requirements_count": 4,
   "test_cases_count": 5,
   "results": [
@@ -12,6 +13,7 @@
       "status": "Passed",
       "priority": "High",
       "type": "Functional",
+      "feature": "Authentication",
       "duration": "0m 42s",
       "requirement_ids": [
         "AUTH-1"
@@ -37,6 +39,7 @@
       "status": "Failed",
       "priority": "High",
       "type": "Error Handling",
+      "feature": "Authentication",
       "duration": "0m 18s",
       "requirement_ids": [
         "AUTH-1"
@@ -50,6 +53,22 @@
       ],
       "failure_details": "The flow accepted a public email domain and allowed progression.",
       "blocker_details": "",
+      "expected_results": [
+        "Public email domains are rejected before the user can continue."
+      ],
+      "actual_result": "The Continue button became active and moved the user to the next registration step.",
+      "console_errors": [
+        "ValidationPolicyError: disposable/public domain rule was not applied"
+      ],
+      "network_errors": [
+        "POST /api/signup/validate-email returned 200 for gmail.com"
+      ],
+      "browser_context": {
+        "current_url": "https://develop.example.test/signup",
+        "browser": "Chrome",
+        "viewport": "1440x900",
+        "role": "Anonymous visitor"
+      },
       "evidence": [
         "evidence/public-email-failure.png"
       ]
@@ -60,6 +79,7 @@
       "status": "Blocked",
       "priority": "Medium",
       "type": "Functional",
+      "feature": "Company Data",
       "duration": "0m 12s",
       "requirement_ids": [
         "ST1-1"

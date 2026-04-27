@@ -28,10 +28,12 @@ Ask which defects to draft:
 - steps to reproduce
 - expected result
 - actual result
+- console errors if captured
+- network or API errors if captured
+- browser context when relevant
 - evidence paths
 - notes
 
 ## Jira Creation Rule
 
 Only create Jira issues if the user explicitly confirms and project-specific Jira configuration exists. Do not guess required fields, workflows, links, or whether the defect should be a new issue or a comment on an existing issue.
-

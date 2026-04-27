@@ -19,6 +19,7 @@ QA Compass can:
 - generate traceable test cases from requirements
 - preserve the embedded test-case generation rules as the quality baseline
 - select execution subsets such as smoke, top priority, critical path, rerun failed, or rerun blocked
+- generate a pre-execution scope preview so the user can confirm exactly what will be tested
 - guide browser validation with `playwright-cli`
 - optionally export grouped Playwright `.spec.ts` starter files
 - generate internal HTML reports with evidence and artifact legends
@@ -46,6 +47,7 @@ Source materials
   -> test cases
   -> optional Playwright starter specs
   -> execution subset
+  -> scope preview and confirmation
   -> browser validation
   -> internal and external reports
   -> optional Jira bug drafts
@@ -97,6 +99,9 @@ Common artifacts include:
 - `traceability.json`: requirement-to-test mapping
 - `roles.json`: detected and confirmed roles
 - `grouping-proposal.json`: feature, module, epic, role, or custom grouping options
+- `qa-scope-preview.html`: pre-execution scope review for user confirmation
+- `qa-scope-preview.json`: machine-readable selected scope preview
+- `qa-scope-preview.md`: readable selected scope preview
 - `execution-progress.json`: execution state for continuation
 - `remaining-cases.json`: cases not yet executed
 - `run-summary.json`: machine-readable execution summary
@@ -106,12 +111,15 @@ Common artifacts include:
 - `jira-bug-drafts.md`: readable defect drafts for review
 - `playwright-specs/`: optional starter `.spec.ts` files grouped by scope
 
+Scope previews show selected versus total cases, grouping, priority/type mix, warnings, a grouped selected-case list, and links to the full test-case source before browser execution starts.
+
 Internal reports include an expandable generated-files legend so a reviewer can quickly understand what each file is for and where to find it.
 
 ## Reports
 
-QA Compass produces two report styles:
+QA Compass produces one pre-execution review and two post-execution report styles:
 
+- **Scope preview**: pre-execution HTML/Markdown/JSON review of what will be tested, grouped by the confirmed strategy.
 - **Internal report**: detailed QA report for the delivery team, including evidence, executed steps, defects, blockers, and generated artifact links.
 - **External report**: cleaner executive-style report for clients and stakeholders, focused on scope, status, key metrics, confirmed defects, and blockers.
 
@@ -139,6 +147,7 @@ QA Compass reduces token spend by using scripts and canonical files for mechanic
 - build JQL plans
 - prepare compact test-case generation briefs
 - select execution subsets
+- render pre-execution scope previews
 - render reports
 - generate artifact manifests
 - draft structured defect payloads

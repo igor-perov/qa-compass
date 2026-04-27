@@ -31,3 +31,6 @@ Use `feature` by default when feature names are available. Prefer `role` only wh
 - `roles-and-groups.md`
 - `grouping-proposal.json`
 
+## Reporting Rule
+
+Preserve the confirmed `grouping_strategy` in execution results. Internal reports must render execution details grouped by the selected strategy so reviewed and passed cases remain easy to scan by feature, module, role, Jira epic/component, source section, or custom scope.

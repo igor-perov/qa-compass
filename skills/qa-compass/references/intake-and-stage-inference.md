@@ -46,6 +46,7 @@ Examples:
 - `propose-grouping`: request mentions grouping by feature/module/epic/role/custom scope
 - `generate-cases`: request mentions test cases, QA coverage, scenarios, or coverage matrix
 - `export-playwright-specs`: request mentions reusable Playwright specs, `.spec.ts`, or starter automation artifacts
+- `scope-preview`: request mentions scope preview, pre-execution review, confirm scope, or reviewing cases before execution
 - `execute`: request mentions run, test, validate, rerun, browser checks, smoke, top 5, high priority
 - `report`: request mentions report, stakeholder summary, html, pdf, defect list, summary
 - `draft-defects`: request mentions Jira-ready bug drafts, bug drafts, defect drafts, or drafting tickets from failed results

@@ -9,7 +9,7 @@ description: Use when requirements, Jira issues, Confluence pages, markdown spec
 
 This is the flagship QA workflow for turning source materials into reusable QA artifacts.
 
-It is prompt-first where QA judgment is needed, but uses bundled scripts and canonical JSON artifacts to reduce token spend across intake, normalization, project understanding, case generation, optional reusable Playwright spec export, execution, reporting, and defect drafting.
+It is prompt-first where QA judgment is needed, but uses bundled scripts and canonical JSON artifacts to reduce token spend across intake, normalization, project understanding, case generation, optional reusable Playwright spec export, pre-execution scope preview, execution, reporting, and defect drafting.
 
 ## When to Use
 
@@ -61,6 +61,7 @@ For Jira writes:
 - `propose-grouping`
 - `generate-cases`
 - `export-playwright-specs`
+- `scope-preview`
 - `execute`
 - `report`
 - `draft-defects`
@@ -88,6 +89,7 @@ Detailed rules live in:
 - Use `scripts/prepare_test_case_brief.py` only to reduce token spend and shape inputs.
 - When requirements are the source for case generation, explicitly resolve `full coverage` versus `smoke only` before generating the suite.
 - Reusable Playwright `.spec.ts` files are optional starter artifacts and should be grouped by feature or module when exported.
+- Before browser execution, generate a pre-execution scope preview when test cases or an execution subset are available, then ask the user to confirm the scope.
 - Every run should preserve reusable QA memory so future runs can reuse canonical artifacts before re-ingesting or regenerating.
 - Browser execution and PDF export must use `playwright-cli`.
 - Generated `.spec.ts` files do not replace `playwright-cli` for live execution inside this skill.
@@ -108,6 +110,7 @@ Detailed rules live in:
 - `scripts/propose_grouping.py`
 - `scripts/export_playwright_specs.py`
 - `scripts/select_execution_subset.py`
+- `scripts/build_scope_preview.py`
 - `scripts/build_report_bundle.py`
 - `scripts/build_artifact_manifest.py`
 - `scripts/draft_jira_bugs.py`
