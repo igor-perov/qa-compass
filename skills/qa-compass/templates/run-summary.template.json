@@ -1,0 +1,6 @@
+{
+  "project_name": "$project_name",
+  "run_date": "$run_date",
+  "environment": "$environment",
+  "subset_mode": "$subset_mode"
+}

@@ -10,8 +10,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILLS_ROOT = REPO_ROOT / "skills"
 DEFAULT_SKILLS = [
-    "requirements-qa-orchestrator",
+    "qa-compass",
     "confluence-qa-orchestrator",
+    "requirements-qa-orchestrator",
 ]
 
 
@@ -51,7 +52,11 @@ def install_skill(skill_name: str, destination_root: Path, overwrite: bool) -> P
             )
         shutil.rmtree(destination)
 
-    shutil.copytree(source, destination)
+    shutil.copytree(
+        source,
+        destination,
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", ".DS_Store"),
+    )
     return destination
 
 

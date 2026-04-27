@@ -1,0 +1,31 @@
+{
+  "project_name": "Sample Valuation",
+  "requirements": [
+    {
+      "id": "AUTH-1",
+      "feature": "Registration",
+      "title": "Work email registration",
+      "source": {
+        "title": "Registration PRD",
+        "url": "https://example.test/prd/auth"
+      },
+      "statement": "Users can register with a work email only.",
+      "acceptance_criteria": [
+        "Public email domains are rejected.",
+        "Successful OTP verification redirects to company data."
+      ],
+      "roles": [
+        "Guest visitor"
+      ],
+      "business_rules": [
+        "OTP expires after 10 minutes."
+      ],
+      "dependencies": [
+        "Email verification service"
+      ],
+      "ambiguities": [
+        "Resend attempt limit is not specified."
+      ]
+    }
+  ]
+}

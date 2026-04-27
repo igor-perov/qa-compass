@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>External QA Report - $project_name</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --surface: #ffffff;
+      --border: #e5e7eb;
+      --text: #18202f;
+      --muted: #64748b;
+      --passed: #1f9d55;
+      --failed: #dc2626;
+      --blocked: #d97706;
+    }
+    @page { size: letter landscape; margin: 14mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 40px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Inter", "Segoe UI", sans-serif;
+    }
+    .shell {
+      max-width: 1120px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 36px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 22px;
+      margin-bottom: 26px;
+    }
+    h1 { margin: 0; font-size: 36px; line-height: 1.1; }
+    .subtitle { color: var(--muted); margin: 10px 0 0; }
+    .meta { color: var(--muted); line-height: 1.7; text-align: right; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+      background: #fbfdff;
+    }
+    .card span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .card strong {
+      display: block;
+      font-size: 34px;
+      margin-top: 8px;
+    }
+    section { margin-top: 24px; }
+    h2 { margin: 0 0 12px; font-size: 22px; }
+    .issue {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin: 12px 0;
+      background: #fff;
+    }
+    .issue h3 { margin: 0 0 8px; }
+    .muted { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div>
+        <h1>Executive QA Dashboard</h1>
+        <p class="subtitle">$project_name</p>
+      </div>
+      <div class="meta">
+        <div>Environment: <strong>$environment</strong></div>
+        <div>Run date: <strong>$run_date</strong></div>
+        <div>Subset: <strong>$subset_mode</strong></div>
+      </div>
+    </header>
+
+    <div class="cards">
+      <div class="card"><span>Executed</span><strong>$executed_count</strong></div>
+      <div class="card"><span>Passed</span><strong style="color: var(--passed);">$passed_count</strong></div>
+      <div class="card"><span>Failed</span><strong style="color: var(--failed);">$failed_count</strong></div>
+      <div class="card"><span>Blocked</span><strong style="color: var(--blocked);">$blocked_count</strong></div>
+      <div class="card"><span>Confirmed defects</span><strong>$defect_count</strong></div>
+    </div>
+
+    <section>
+      <h2>Tested Scope</h2>
+      <p class="muted">This report summarizes the executed QA subset and highlights only confirmed defects and blockers that need follow-up.</p>
+    </section>
+
+    <section>
+      <h2>Confirmed defects</h2>
+      $external_defect_summary
+    </section>
+
+    <section>
+      <h2>Blocked Cases</h2>
+      $external_blocker_summary
+    </section>
+  </main>
+</body>
+</html>

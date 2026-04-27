@@ -1,73 +1,160 @@
-# Requirements QA Orchestrator Skills
+# QA Compass
 
-Cross-platform AI skills for turning product requirements into test cases, reusable Playwright starter specs, execution subsets, browser validation, and stakeholder-ready QA reports.
+QA Compass is an AI skill for turning product requirements, Jira work items, Confluence pages, PRDs, test cases, and execution results into a clear, reusable QA workflow.
 
-This repo is designed to work well for teams using Codex or Claude Code, especially PMs, BAs, QAs, and engineers who want a guided requirements-to-QA workflow instead of a one-off prompt.
+It helps PMs, BAs, QAs, and engineers move from "we have requirements somewhere" to practical QA artifacts: project summaries, role-aware test coverage, execution subsets, browser validation guidance, internal reports, external reports, and Jira-ready defect drafts.
 
-## Included Skills
+The goal is simple: make requirements-driven QA faster, easier to review, and easier to continue later without re-reading every source document from scratch.
 
-### `requirements-qa-orchestrator`
+## What QA Compass Does
 
-The flagship workflow.
+QA Compass can:
 
-Use it when requirements start in:
+- ingest requirements from Confluence, Jira, markdown, JSON, or pasted text
+- search live Jira work items through the Atlassian/Rovo connector when available
+- normalize messy source material into canonical QA artifacts
+- create a project summary that explains what the product appears to do
+- detect user roles and ask for confirmation before coverage is built around them
+- propose grouping by feature, module, epic, role, source section, or custom strategy
+- generate traceable test cases from requirements
+- preserve the embedded test-case generation rules as the quality baseline
+- select execution subsets such as smoke, top priority, critical path, rerun failed, or rerun blocked
+- guide browser validation with `playwright-cli`
+- optionally export grouped Playwright `.spec.ts` starter files
+- generate internal HTML reports with evidence and artifact legends
+- generate cleaner external reports for client or stakeholder sharing
+- draft Jira-ready bugs from confirmed failures
+- keep reusable QA memory so future runs can continue from existing artifacts
 
-- Confluence
-- requirements JSON
-- test-cases JSON
-- markdown or PRD files
-- pasted text
+## Why It Exists
 
-It helps with:
+Requirements-to-QA work often fails in two predictable ways:
 
-- guided intake and stage inference
-- requirement normalization
-- traceable test-case generation
-- optional grouped Playwright `.spec.ts` starter export
-- execution subset selection
-- browser validation with `playwright-cli`
-- HTML and PDF QA reporting
+- the AI spends too many tokens rediscovering the same project context every time
+- the output looks useful once, but is hard to reuse, trace, or continue
 
-### `confluence-qa-orchestrator`
+QA Compass is built around reusable artifacts and guided decisions. It asks only the next blocker question, uses scripts for mechanical conversion, and leaves judgment-heavy work to AI: project understanding, test design, readiness analysis, role interpretation, and defect wording.
 
-A compatibility wrapper for Confluence-led starts.
-
-Use it when the request is clearly about a Confluence page tree, folder, or space and you want a Confluence-first entry point before continuing with the flagship workflow.
-
-## Why This Repo Exists
-
-Most requirements-to-QA prompting breaks down in one of two ways:
-
-1. it spends too many tokens re-explaining the workflow every time
-2. it produces nice-looking artifacts that are not reusable or traceable
-
-This repo is opinionated about fixing both problems.
-
-## What It Optimizes For
-
-- lower token spend through bundled scripts and canonical JSON artifacts
-- better first-turn guidance that asks only the next blocker question
-- better generation guidance by explicitly resolving `full coverage` versus `smoke only`
-- preserved `test-cases` generation rules as a quality baseline
-- `playwright-cli` for browser execution and PDF export
-- reusable Playwright starter specs when teams want repo-friendly artifacts
-- reusable installation across projects and teammates
-- outputs that are readable by PM, BA, QA, and engineering stakeholders
-
-## Repo Layout
+## Typical Workflow
 
 ```text
-skills/
-  requirements-qa-orchestrator/
-  confluence-qa-orchestrator/
-scripts/
-  install_local_skills.py
-  smoke_validate.py
+Source materials
+  -> ingest
+  -> normalize
+  -> project summary
+  -> roles and grouping
+  -> test cases
+  -> optional Playwright starter specs
+  -> execution subset
+  -> browser validation
+  -> internal and external reports
+  -> optional Jira bug drafts
 ```
+
+You do not need to run every stage every time. QA Compass can start from requirements, existing test cases, execution results, or a specific Jira scope.
+
+## Supported Sources
+
+### Confluence
+
+Use Confluence when requirements live in pages, folders, spaces, or linked product docs. QA Compass preserves page titles, URLs, and source references so generated coverage remains traceable.
+
+### Jira
+
+Use Jira when QA scope lives in current sprint, Ready for QA statuses, issue keys, epics, releases, components, or JQL.
+
+When Atlassian/Rovo is available, QA Compass can use live Jira search instead of requiring a manual export. It can build common JQL plans for:
+
+- Ready for QA style statuses
+- current sprint
+- custom workflow statuses
+- exact issue keys
+- epic scope
+- release or fixVersion scope
+- component scope
+
+### Markdown and PRDs
+
+Use markdown for product specs, PRDs, or local requirement docs.
+
+### JSON
+
+Use JSON when requirements, test cases, or execution results already exist in a structured format.
+
+### Pasted Text
+
+Use pasted text for quick one-off analysis, small specs, or early drafts.
+
+## Generated Artifacts
+
+QA Compass is artifact-first. Important outputs are designed to be reused in later runs.
+
+Common artifacts include:
+
+- `project-summary.md`: AI-generated understanding of what the product appears to do
+- `requirements-normalized.json`: canonical requirements
+- `test-cases.json`: source of truth for generated test coverage
+- `traceability.json`: requirement-to-test mapping
+- `roles.json`: detected and confirmed roles
+- `grouping-proposal.json`: feature, module, epic, role, or custom grouping options
+- `execution-progress.json`: execution state for continuation
+- `remaining-cases.json`: cases not yet executed
+- `run-summary.json`: machine-readable execution summary
+- `qa-report.internal.html`: detailed team-facing report
+- `qa-report.external.html`: stakeholder-facing report
+- `jira-bug-drafts.json`: structured defect drafts
+- `jira-bug-drafts.md`: readable defect drafts for review
+- `playwright-specs/`: optional starter `.spec.ts` files grouped by scope
+
+Internal reports include an expandable generated-files legend so a reviewer can quickly understand what each file is for and where to find it.
+
+## Reports
+
+QA Compass produces two report styles:
+
+- **Internal report**: detailed QA report for the delivery team, including evidence, executed steps, defects, blockers, and generated artifact links.
+- **External report**: cleaner executive-style report for clients and stakeholders, focused on scope, status, key metrics, confirmed defects, and blockers.
+
+PDF export is supported through `playwright-cli`.
+
+## Jira Defect Flow
+
+QA Compass is intentionally draft-first for Jira writes.
+
+The flow is:
+
+1. Execution results identify confirmed failures.
+2. QA Compass creates Jira-ready bug drafts.
+3. The user reviews and selects which drafts should become Jira issues.
+4. Project-specific required fields are confirmed.
+5. Jira issues are created only after explicit confirmation.
+
+This keeps the workflow safe across teams where Jira fields, issue types, linking rules, and bug-reporting conventions differ.
+
+## Token Economy
+
+QA Compass reduces token spend by using scripts and canonical files for mechanical work:
+
+- import and normalize source files
+- build JQL plans
+- prepare compact test-case generation briefs
+- select execution subsets
+- render reports
+- generate artifact manifests
+- draft structured defect payloads
+
+AI is reserved for tasks that need judgment:
+
+- understanding the product
+- resolving ambiguous requirements
+- identifying roles and business flows
+- designing test coverage
+- classifying Jira readiness when workflow statuses are unclear
+- writing high-quality defect descriptions
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10+
 - `npm` and `npx`
 - Playwright CLI for browser execution and PDF export
 
@@ -88,15 +175,7 @@ The packaged PDF export helper also supports an `npx` fallback when a global `pl
 Clone the repo, then install into the local Codex skills directory:
 
 ```bash
-python3 scripts/install_local_skills.py --dest ~/.codex/skills
-```
-
-Install only the flagship skill:
-
-```bash
-python3 scripts/install_local_skills.py \
-  --dest ~/.codex/skills \
-  --skill requirements-qa-orchestrator
+python3 scripts/install_local_skills.py --dest ~/.codex/skills --skill qa-compass
 ```
 
 ### Claude Code
@@ -104,35 +183,25 @@ python3 scripts/install_local_skills.py \
 Use the same installer, but point it at Claude Code's skills directory:
 
 ```bash
-python3 scripts/install_local_skills.py --dest ~/.claude/skills
-```
-
-Install only the flagship skill:
-
-```bash
-python3 scripts/install_local_skills.py \
-  --dest ~/.claude/skills \
-  --skill requirements-qa-orchestrator
+python3 scripts/install_local_skills.py --dest ~/.claude/skills --skill qa-compass
 ```
 
 ### Replace Existing Installed Copies
 
 ```bash
-python3 scripts/install_local_skills.py --overwrite
+python3 scripts/install_local_skills.py --dest ~/.codex/skills --skill qa-compass --overwrite
 ```
 
 Restart your agent app after installation.
 
 ## Install From GitHub
 
-### Codex
-
-After pushing this repo to GitHub, Codex users can install directly with the built-in skill installer.
+Codex users can install directly with the built-in skill installer after this repo is available on GitHub.
 
 Prompt example:
 
 ```text
-Use $skill-installer to install requirements-qa-orchestrator and confluence-qa-orchestrator from <owner>/<repo>.
+Use $skill-installer to install qa-compass from <owner>/<repo>.
 ```
 
 Direct script example:
@@ -140,37 +209,59 @@ Direct script example:
 ```bash
 python3 ~/.codex/skills/.system/skill-installer/scripts/install-skill-from-github.py \
   --repo <owner>/<repo> \
-  --path skills/requirements-qa-orchestrator \
-  --path skills/confluence-qa-orchestrator
+  --path skills/qa-compass
 ```
 
-### Claude Code
+## Quick Start Prompts
 
-Clone the repo and install to `~/.claude/skills`:
+Try prompts like:
 
-```bash
-git clone <repo-url>
-cd requirements-qa-orchestrator-skills
-python3 scripts/install_local_skills.py --dest ~/.claude/skills
+```text
+Use $qa-compass to pull requirements from Confluence and generate full coverage test cases.
 ```
 
-Restart your agent app after installation.
+```text
+Use $qa-compass to find Ready for QA issues in Jira project ABC and create a QA plan.
+```
 
-## Quick Start
+```text
+Use $qa-compass to analyze the current sprint in Jira, identify what is ready for QA, and generate traceable test cases.
+```
 
-Once installed, good starter prompts include:
+```text
+Use $qa-compass to normalize this PRD markdown file, summarize the project, confirm roles, and propose test grouping.
+```
 
-- "Pull requirements from Confluence and generate test cases"
-- "Pull requirements from Confluence and generate full-coverage test cases plus reusable Playwright specs"
-- "Here is a PRD markdown file. Normalize it and create QA coverage"
-- "Here is a requirements JSON file. Build traceable QA artifacts"
-- "Here is a test-cases JSON file. Run the top 5 high-priority cases on staging"
-- "Export grouped Playwright .spec.ts starter files from this test-cases JSON"
-- "Turn these execution results into an HTML and PDF stakeholder report"
+```text
+Use $qa-compass to run the top 5 high-priority cases from this test-cases JSON on staging.
+```
+
+```text
+Use $qa-compass to turn these execution results into internal and external QA reports.
+```
+
+```text
+Use $qa-compass to draft Jira bugs for the confirmed defects in this run.
+```
+
+## Repo Layout
+
+```text
+skills/
+  qa-compass/
+    SKILL.md
+    references/
+    scripts/
+    templates/
+    tests/
+scripts/
+  install_local_skills.py
+  smoke_validate.py
+```
 
 ## Validation
 
-Run the packaged test suite and build a sample HTML report:
+Run the packaged test suite and build sample artifacts:
 
 ```bash
 python3 scripts/smoke_validate.py
@@ -182,12 +273,11 @@ Also verify PDF export:
 python3 scripts/smoke_validate.py --with-pdf
 ```
 
-## Platform Notes
+Run the skill test suite directly:
 
-- Codex users get the smoothest GitHub-based install flow through the built-in skill installer.
-- Claude Code users can use this repo cleanly through clone-and-install to `~/.claude/skills`.
-- The flagship skill is the recommended default for new users.
-- The Confluence wrapper exists for compatibility and Confluence-first workflows, not as the main entry point.
+```bash
+python3 -m unittest discover skills/qa-compass/tests -v
+```
 
 ## License
 

@@ -1,0 +1,90 @@
+{
+  "project_name": "Sample Valuation",
+  "cases": [
+    {
+      "id": "TC-AUTH-F-001",
+      "title": "Register with a valid work email",
+      "feature": "Auth",
+      "requirement_ids": [
+        "AUTH-1"
+      ],
+      "priority": "High",
+      "category": "Functional",
+      "preconditions": [
+        "Landing page is available"
+      ],
+      "steps": [
+        "Open the landing page",
+        "Enter a valid work email",
+        "Complete user details",
+        "Submit a valid OTP"
+      ],
+      "expected_results": [
+        "Registration succeeds",
+        "User reaches company data"
+      ],
+      "automation_candidate": true
+    },
+    {
+      "id": "TC-AUTH-ERR-001",
+      "title": "Reject a public email domain",
+      "feature": "Auth",
+      "requirement_ids": [
+        "AUTH-1"
+      ],
+      "priority": "High",
+      "category": "Error Handling",
+      "preconditions": [
+        "Landing page is available"
+      ],
+      "steps": [
+        "Open the landing page",
+        "Enter a public email address"
+      ],
+      "expected_results": [
+        "Continue remains unavailable"
+      ],
+      "automation_candidate": true
+    },
+    {
+      "id": "TC-COMPANY-F-001",
+      "title": "Complete company data",
+      "feature": "Company Data",
+      "requirement_ids": [
+        "ST1-1"
+      ],
+      "priority": "Medium",
+      "category": "Functional",
+      "preconditions": [
+        "User is logged in"
+      ],
+      "steps": [
+        "Open company data",
+        "Fill all required fields",
+        "Continue"
+      ],
+      "expected_results": [
+        "Stage 1 progresses"
+      ],
+      "automation_candidate": true
+    },
+    {
+      "id": "TC-HELP-F-001",
+      "title": "Open help tooltip",
+      "feature": "General",
+      "requirement_ids": [
+        "UX-1"
+      ],
+      "priority": "Low",
+      "category": "Functional",
+      "preconditions": [],
+      "steps": [
+        "Open tooltip"
+      ],
+      "expected_results": [
+        "Tooltip is visible"
+      ],
+      "automation_candidate": false
+    }
+  ]
+}

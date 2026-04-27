@@ -11,7 +11,7 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-FLAGSHIP_ROOT = REPO_ROOT / "skills" / "requirements-qa-orchestrator"
+FLAGSHIP_ROOT = REPO_ROOT / "skills" / "qa-compass"
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,6 +44,8 @@ def require_paths() -> None:
         REPO_ROOT / "scripts" / "smoke_validate.py",
         FLAGSHIP_ROOT / "SKILL.md",
         FLAGSHIP_ROOT / "agents" / "openai.yaml",
+        FLAGSHIP_ROOT / "scripts" / "build_jira_jql.py",
+        FLAGSHIP_ROOT / "scripts" / "ingest_jira.py",
         REPO_ROOT / "skills" / "confluence-qa-orchestrator" / "SKILL.md",
         REPO_ROOT / "skills" / "confluence-qa-orchestrator" / "agents" / "openai.yaml",
     ]
@@ -91,6 +93,17 @@ def main() -> None:
                 str(FLAGSHIP_ROOT / "tests" / "fixtures" / "sample_test_cases.json"),
                 "--output",
                 str(tmp_root / "test-cases.json"),
+            ]
+        )
+
+        run(
+            [
+                sys.executable,
+                str(FLAGSHIP_ROOT / "scripts" / "build_jira_jql.py"),
+                "--project-key",
+                "QA",
+                "--mode",
+                "ready-for-qa",
             ]
         )
 

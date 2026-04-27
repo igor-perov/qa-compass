@@ -1,0 +1,80 @@
+{
+  "project_name": "Sample Valuation",
+  "run_date": "2026-03-23",
+  "environment": "https://develop.example.test",
+  "subset_mode": "high-priority",
+  "requirements_count": 4,
+  "test_cases_count": 5,
+  "results": [
+    {
+      "test_case_id": "TC-AUTH-F-001",
+      "title": "Register with a valid work email",
+      "status": "Passed",
+      "priority": "High",
+      "type": "Functional",
+      "duration": "0m 42s",
+      "requirement_ids": [
+        "AUTH-1"
+      ],
+      "executed_steps": [
+        "Open the landing page",
+        "Enter a valid work email",
+        "Complete user details",
+        "Submit a valid OTP"
+      ],
+      "notes": [
+        "User reached company data."
+      ],
+      "failure_details": "",
+      "blocker_details": "",
+      "evidence": [
+        "evidence/registration-success.png"
+      ]
+    },
+    {
+      "test_case_id": "TC-AUTH-ERR-001",
+      "title": "Reject a public email domain",
+      "status": "Failed",
+      "priority": "High",
+      "type": "Error Handling",
+      "duration": "0m 18s",
+      "requirement_ids": [
+        "AUTH-1"
+      ],
+      "executed_steps": [
+        "Open the landing page",
+        "Enter a public email address"
+      ],
+      "notes": [
+        "Continue button became active unexpectedly."
+      ],
+      "failure_details": "The flow accepted a public email domain and allowed progression.",
+      "blocker_details": "",
+      "evidence": [
+        "evidence/public-email-failure.png"
+      ]
+    },
+    {
+      "test_case_id": "TC-ST1-F-001",
+      "title": "Complete company data",
+      "status": "Blocked",
+      "priority": "Medium",
+      "type": "Functional",
+      "duration": "0m 12s",
+      "requirement_ids": [
+        "ST1-1"
+      ],
+      "executed_steps": [
+        "Open company data"
+      ],
+      "notes": [
+        "User could not proceed because test credentials expired."
+      ],
+      "failure_details": "",
+      "blocker_details": "Test account could not authenticate because OTP inbox access was unavailable.",
+      "evidence": [
+        "evidence/stage1-blocked.png"
+      ]
+    }
+  ]
+}
