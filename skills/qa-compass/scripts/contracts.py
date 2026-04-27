@@ -62,6 +62,10 @@ RESULT_KEYS = [
     "failure_details",
     "blocker_details",
     "evidence",
+    "screenshot",
+    "screenshots",
+    "screenshot_path",
+    "screenshot_paths",
     "requirement_ids",
 ]
 

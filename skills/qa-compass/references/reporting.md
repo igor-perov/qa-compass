@@ -42,7 +42,7 @@ The internal report should be visibly stronger than a raw dump. Prefer:
 - execution results grouped by the confirmed grouping strategy, with case ID, title, roles, priority, duration, and status
 - blocked section
 - defect section with failure summary, expected result, actual result, executed steps, diagnostics, and evidence
-- evidence panels or screenshot references
+- evidence panels with copied local screenshot files when results contain `evidence`, `screenshot_path`, `screenshots`, or attachment artifacts
 - an expandable generated-files legend near the top with a folder-aware tree, links to every generated file in the bundle, and a short description for each file
 
 The external report should be presentation-ready and concise:

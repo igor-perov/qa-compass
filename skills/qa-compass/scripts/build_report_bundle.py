@@ -6,7 +6,7 @@ import os
 import shutil
 from html import escape
 from pathlib import Path
-from urllib.parse import quote, urlparse
+from urllib.parse import quote, unquote, urlparse
 
 from io_utils import read_json, render_template, write_json, write_text
 
@@ -26,6 +26,35 @@ except ImportError:  # pragma: no cover - direct script fallback
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
 IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg")
+EVIDENCE_KEYS = (
+    "evidence",
+    "screenshot",
+    "screenshots",
+    "screenshot_path",
+    "screenshot_paths",
+    "screenshot_file",
+    "screenshot_files",
+    "image",
+    "images",
+)
+EVIDENCE_CONTAINER_KEYS = (
+    "attachments",
+    "artifacts",
+    "browser_artifacts",
+    "playwright_artifacts",
+)
+EVIDENCE_DICT_KEYS = (
+    "path",
+    "file",
+    "filename",
+    "url",
+    "uri",
+    "href",
+    "src",
+    "screenshot",
+    "screenshot_path",
+    "artifact_path",
+)
 
 
 def build_counts(results: list[dict]) -> dict:
@@ -692,11 +721,59 @@ def prepare_evidence_assets(results: list[dict], input_dir: Path, output_dir: Pa
     used_names: set[str] = set()
     for item in results:
         rewritten = []
-        for reference in force_list(item.get("evidence")):
+        for reference in collect_evidence_references(item):
             ref = str(reference)
             rewritten.append(copy_evidence_reference(ref, input_dir, output_dir, evidence_dir, copied, used_names))
         if rewritten:
-            item["evidence"] = rewritten
+            item["evidence"] = dedupe_strings(rewritten)
+
+
+def collect_evidence_references(item: dict) -> list[str]:
+    references = []
+    for key in EVIDENCE_KEYS:
+        references.extend(extract_evidence_references(item.get(key)))
+    for key in EVIDENCE_CONTAINER_KEYS:
+        references.extend(extract_evidence_references(item.get(key)))
+
+    browser_context = item.get("browser_context")
+    if isinstance(browser_context, dict):
+        for key in EVIDENCE_CONTAINER_KEYS:
+            references.extend(extract_evidence_references(browser_context.get(key)))
+
+    return dedupe_strings(references)
+
+
+def extract_evidence_references(value) -> list[str]:
+    if value in (None, ""):
+        return []
+    if isinstance(value, (str, Path)):
+        reference = str(value).strip()
+        return [reference] if reference else []
+    if isinstance(value, (list, tuple, set)):
+        references = []
+        for item in value:
+            references.extend(extract_evidence_references(item))
+        return references
+    if isinstance(value, dict):
+        references = []
+        for key in EVIDENCE_DICT_KEYS:
+            references.extend(extract_evidence_references(value.get(key)))
+        for key in EVIDENCE_CONTAINER_KEYS:
+            references.extend(extract_evidence_references(value.get(key)))
+        return references
+    return []
+
+
+def dedupe_strings(values: list[str]) -> list[str]:
+    seen = set()
+    deduped = []
+    for value in values:
+        text = str(value).strip()
+        if not text or text in seen:
+            continue
+        seen.add(text)
+        deduped.append(text)
+    return deduped
 
 
 def copy_evidence_reference(
@@ -710,13 +787,13 @@ def copy_evidence_reference(
     if not reference or is_remote_reference(reference):
         return reference
 
-    source = Path(reference).expanduser()
+    source = reference_to_path(reference).expanduser()
     if not source.is_absolute():
-        candidate = input_dir / source
-        if candidate.exists():
-            source = candidate
-        elif (output_dir / source).exists():
-            return source.as_posix()
+        for root in candidate_evidence_roots(input_dir, output_dir):
+            candidate = root / source
+            if candidate.exists():
+                source = candidate
+                break
         else:
             return reference
 
@@ -735,6 +812,26 @@ def copy_evidence_reference(
     relative = target.relative_to(output_dir).as_posix()
     copied[resolved] = relative
     return relative
+
+
+def reference_to_path(reference: str) -> Path:
+    parsed = urlparse(reference)
+    if parsed.scheme == "file":
+        return Path(unquote(parsed.path))
+    return Path(reference)
+
+
+def candidate_evidence_roots(input_dir: Path, output_dir: Path) -> list[Path]:
+    roots = [input_dir, output_dir, input_dir.parent, output_dir.parent, Path.cwd()]
+    deduped = []
+    seen = set()
+    for root in roots:
+        resolved = root.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        deduped.append(root)
+    return deduped
 
 
 def unique_evidence_name(filename: str, used_names: set[str]) -> str:

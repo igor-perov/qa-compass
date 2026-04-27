@@ -48,7 +48,7 @@ Each executed case should capture:
 - expected result for failed cases
 - actual result for failed cases
 - notes
-- screenshot path when meaningful
+- screenshot path when meaningful; store it in `evidence`, `screenshot_path`, `screenshots`, or `attachments` so the report bundle can copy it into the internal report
 - log references when useful
 - console errors when visible
 - network or API errors when visible

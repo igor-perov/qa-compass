@@ -141,6 +141,54 @@ class ReportBundleTests(unittest.TestCase):
             self.assertIn('href="evidence/screen%20shot.png"', internal_html)
             self.assertIn("Generated run artifact.", internal_html)
 
+    def test_report_bundle_promotes_screenshot_fields_into_evidence_gallery(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            input_dir = root / "input"
+            screenshot_dir = input_dir / "screenshots"
+            screenshot_dir.mkdir(parents=True)
+            (screenshot_dir / "failure.png").write_bytes(b"fake-png")
+
+            payload = json.loads((self.FIXTURES_DIR / "sample_execution_results.json").read_text(encoding="utf-8"))
+            payload["results"][1]["evidence"] = []
+            payload["results"][1]["screenshot_path"] = "screenshots/failure.png"
+            payload_path = input_dir / "execution-results.json"
+            payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
+            output_dir = root / "report"
+            build_report_bundle.build_report_bundle(str(payload_path), str(output_dir))
+
+            self.assertTrue((output_dir / "evidence" / "failure.png").exists())
+            summary = json.loads((output_dir / "run-summary.json").read_text(encoding="utf-8"))
+            self.assertEqual(summary["defects"][0]["evidence"], ["evidence/failure.png"])
+
+            internal_html = (output_dir / "qa-report.internal.html").read_text(encoding="utf-8")
+            self.assertIn('src="evidence/failure.png"', internal_html)
+            self.assertIn("failure.png", internal_html)
+
+    def test_report_bundle_resolves_run_root_relative_screenshots(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            run_dir = Path(tmpdir) / "run"
+            execution_dir = run_dir / "04-execution" / "screenshots"
+            report_dir = run_dir / "05-report"
+            execution_dir.mkdir(parents=True)
+            report_dir.mkdir(parents=True)
+            (execution_dir / "blocked.png").write_bytes(b"fake-png")
+
+            payload = json.loads((self.FIXTURES_DIR / "sample_execution_results.json").read_text(encoding="utf-8"))
+            payload["results"][2]["evidence"] = []
+            payload["results"][2]["attachments"] = [
+                {"type": "screenshot", "path": "04-execution/screenshots/blocked.png"}
+            ]
+            payload_path = report_dir / "execution-results.json"
+            payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
+            build_report_bundle.build_report_bundle(str(payload_path), str(report_dir))
+
+            self.assertTrue((report_dir / "evidence" / "blocked.png").exists())
+            internal_html = (report_dir / "qa-report.internal.html").read_text(encoding="utf-8")
+            self.assertIn('src="evidence/blocked.png"', internal_html)
+
     def test_report_bundle_reads_parent_manifest_for_full_run_artifact_list(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             run_dir = Path(tmpdir) / "run"
