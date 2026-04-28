@@ -6,6 +6,10 @@
 - Selected cases: $selected_cases / $total_cases
 - Requirements covered: $requirements_covered
 
+## Confirmation Gate
+
+$confirmation_gate
+
 ## Source Artifacts
 
 $artifact_links

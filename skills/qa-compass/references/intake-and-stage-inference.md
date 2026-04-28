@@ -68,6 +68,8 @@ Ask only if the missing information blocks the next action. Good blocker questio
 
 - missing environment URL before execution
 - missing credentials for authenticated execution
+- missing scope-preview confirmation before execution
+- missing OTP/MFA handling plan before execution when selected cases mention OTP, MFA, verification code, email code, SMS code, or magic link
 - missing source file or URL
 - unresolved `full coverage or smoke only?` before generating from requirements
 - unresolved source-of-truth conflict between Jira and Confluence before generating final coverage
@@ -85,5 +87,6 @@ Treat `/wiki/spaces/{spaceKey}/folder/{folderId}` and `/spaces/{spaceKey}/folder
 Do not ask broad questions about all future stages.
 Do not ask for Confluence details when the user already supplied JSON or markdown.
 Do not ask for credentials before the workflow reaches execution.
+Do not treat the user's initial `run` request as post-preview execution confirmation.
 Do not ask about Playwright spec export when the user only wants a report or execution run.
 Do not create Jira tickets during draft generation.

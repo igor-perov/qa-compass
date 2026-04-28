@@ -52,7 +52,15 @@ class DetectStartModeTests(unittest.TestCase):
         payload = detect_start_mode("Here is a test-cases JSON file. Run the top 5 high-priority cases on staging")
         self.assertEqual(payload["source_mode"], "test_cases_json")
         self.assertEqual(payload["stage"], "execute")
+        self.assertIn("scope_preview_confirmation", payload["missing_blockers"])
         self.assertIn("environment_url", payload["missing_blockers"])
+
+    def test_execute_request_with_otp_requires_otp_handling(self):
+        payload = detect_start_mode("Run registration cases with OTP on https://staging.example.test")
+        self.assertEqual(payload["stage"], "execute")
+        self.assertIn("scope_preview_confirmation", payload["missing_blockers"])
+        self.assertIn("credentials_or_test_data", payload["missing_blockers"])
+        self.assertIn("otp_mfa_handling", payload["missing_blockers"])
 
     def test_detects_scope_preview_request(self):
         payload = detect_start_mode("Build a scope preview so I can confirm cases before execution")

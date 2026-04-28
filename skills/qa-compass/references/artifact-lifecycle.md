@@ -43,7 +43,7 @@ If a user asks to continue a previous run, inspect the manifest and prefer the m
 
 - report request: start from `execution-results.json` or `run-summary.json`
 - rerun request: start from `remaining-cases.json`, `execution-progress.json`, or `test-cases.json`
-- scope confirmation request: start from `test-cases.json`, `execution-subset.json`, `roles.json`, and `grouping-proposal.json`
+- scope confirmation request: start from `test-cases.json`, `execution-subset.json`, `roles.json`, and `grouping-proposal.json`; generate `qa-scope-preview.*`, stop, and wait for a follow-up user confirmation before browser execution
 - defect draft request: start from failed cases in `execution-results.json`
 - coverage update: start from `requirements-normalized.json` and existing `test-cases.json`
 - Confluence folder failure: inspect `01-sources/confluence-intake-diagnostics.json` and continue with connector/search/export fallback instead of retrying the same page fetch.

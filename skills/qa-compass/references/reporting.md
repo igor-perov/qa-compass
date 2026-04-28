@@ -20,8 +20,9 @@ Post-execution reporting:
 - `qa-report.internal.html`
 - `qa-report.external.html`
 - `qa-report.html` as a temporary compatibility alias for the internal report
+- optional `qa-report.external.pdf` client snapshot
 
-PDF reports are paused by default because browser-to-PDF output can be visually inconsistent across environments. Generate PDF only when the user explicitly asks for experimental export; HTML is the canonical report format.
+HTML remains the canonical report format. When the user needs a client-shareable attachment, export `qa-report.external.pdf` from `qa-report.external.html` as a snapshot and verify the rendered PDF before sharing it.
 
 ## HTML Quality Bar
 
@@ -77,7 +78,15 @@ For each defect include:
 
 ## PDF Export
 
-Do not export PDFs by default. If the user explicitly asks for PDF, use the helper as an experimental output and still keep the HTML report as the canonical deliverable.
+Do not export internal or combined PDFs by default. For client sharing, export only the external report snapshot as `qa-report.external.pdf` when requested, and still keep `qa-report.external.html` as the canonical deliverable.
+
+Before sharing the PDF, verify:
+
+- the first page shows the dashboard without clipped edges
+- charts and KPI cards fit within page margins
+- issue cards do not split awkwardly when possible
+- text remains readable at print scale
+- screenshots or evidence links remain available in the HTML bundle when detailed evidence is needed
 
 ```bash
 npm install -g @playwright/cli@latest

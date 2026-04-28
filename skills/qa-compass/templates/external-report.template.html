@@ -19,7 +19,7 @@
       --shadow: 0 24px 70px rgba(15, 23, 42, 0.11);
     }
 
-    @page { size: letter landscape; margin: 14mm; }
+    @page { size: A4 landscape; margin: 8mm; }
     * { box-sizing: border-box; }
 
     body {
@@ -234,6 +234,148 @@
 
     .issue h3 { margin: 0 0 8px; font-size: 18px; line-height: 1.3; }
     .issue p { margin: 0; line-height: 1.55; }
+
+    @media print {
+      html,
+      body {
+        width: auto;
+        min-height: auto;
+      }
+
+      body {
+        padding: 0;
+        background: #f8fafc;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .shell {
+        width: 100%;
+        max-width: none;
+        padding: 8mm;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+
+      header {
+        grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+        gap: 14px;
+        padding-bottom: 12px;
+        margin-bottom: 12px;
+      }
+
+      .eyebrow {
+        margin-bottom: 8px;
+        padding: 4px 8px;
+        font-size: 9px;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      .subtitle {
+        margin-top: 8px;
+        font-size: 13px;
+      }
+
+      .snapshot {
+        gap: 7px;
+        padding: 10px;
+      }
+
+      .snapshot h2 {
+        font-size: 15px;
+      }
+
+      .snapshot-row,
+      .muted,
+      .issue p {
+        font-size: 11px;
+        line-height: 1.42;
+      }
+
+      .dashboard {
+        grid-template-columns: minmax(0, 1fr) 280px;
+        gap: 12px;
+        align-items: start;
+        margin-bottom: 12px;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .cards {
+        align-content: start;
+        gap: 8px;
+      }
+
+      .card {
+        min-height: 58px;
+        padding: 9px 10px;
+      }
+
+      .card span {
+        font-size: 9px;
+      }
+
+      .card strong {
+        font-size: 22px;
+      }
+
+      .chart-card {
+        padding: 10px;
+      }
+
+      .chart-card h2,
+      h2 {
+        font-size: 17px;
+      }
+
+      .chart-copy {
+        margin-bottom: 8px;
+        font-size: 11px;
+      }
+
+      .outcome-chart {
+        width: 128px;
+        height: 128px;
+      }
+
+      .outcome-center {
+        inset: 28px;
+      }
+
+      .outcome-center strong {
+        font-size: 20px;
+      }
+
+      .outcome-center span,
+      .legend {
+        font-size: 9px;
+      }
+
+      section {
+        margin-top: 10px;
+      }
+
+      h2 {
+        margin-bottom: 6px;
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+
+      .issue {
+        padding: 8px 10px;
+        margin: 6px 0;
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+
+      .issue h3 {
+        font-size: 13px;
+      }
+    }
 
     @media (max-width: 760px) {
       body {

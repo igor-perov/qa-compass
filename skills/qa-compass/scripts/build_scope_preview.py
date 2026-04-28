@@ -11,6 +11,33 @@ from io_utils import read_json, render_template, write_json, write_text
 
 
 TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
+AUTH_KEYWORDS = (
+    "account",
+    "authenticate",
+    "authenticated",
+    "credentials",
+    "log in",
+    "logged in",
+    "login",
+    "password",
+    "register",
+    "registration",
+    "sign in",
+    "sign-in",
+    "signup",
+    "user is logged in",
+)
+OTP_KEYWORDS = (
+    "2fa",
+    "email code",
+    "magic link",
+    "mfa",
+    "one-time",
+    "one time",
+    "otp",
+    "sms code",
+    "verification code",
+)
 
 
 def build_scope_preview(
@@ -52,6 +79,12 @@ def build_scope_preview(
     roles = build_roles(selected_cases, test_cases_payload, roles_payload)
     coverage = build_coverage(all_cases, selected_cases, groups)
     warnings = build_warnings(all_cases, selected_cases, roles)
+    execution_readiness = build_execution_readiness(
+        selected_cases,
+        subset_payload,
+        test_cases_payload,
+        requirements_payload,
+    )
     preview_payload = {
         "project_name": project_name,
         "source_mode": source_mode,
@@ -62,6 +95,7 @@ def build_scope_preview(
         "coverage": coverage,
         "roles": roles,
         "warnings": warnings,
+        "execution_readiness": execution_readiness,
         "artifact_links": {
             "test_cases": relative_href(test_cases_path, destination),
             "execution_subset": relative_href(subset_path, destination) if subset_path else "",
@@ -249,6 +283,7 @@ def render_html_preview(preview: dict) -> str:
             "groups_count": len(preview["coverage"]["groups"]),
             "priority_chips": render_count_chips(preview["coverage"]["priority_counts"]),
             "type_chips": render_count_chips(preview["coverage"]["type_counts"]),
+            "confirmation_gate_section": render_confirmation_gate(preview["execution_readiness"]),
             "warnings_section": render_warnings_section(preview["warnings"]),
             "artifact_links_section": render_artifact_links(preview["artifact_links"]),
             "groups_section": render_groups_section(preview["coverage"]["groups"]),
@@ -267,6 +302,7 @@ def render_markdown_preview(preview: dict) -> str:
             "total_cases": preview["total_cases"],
             "selected_cases": preview["selected_cases"],
             "requirements_covered": preview["coverage"]["requirements_covered"],
+            "confirmation_gate": render_markdown_confirmation_gate(preview["execution_readiness"]),
             "warnings": render_markdown_list(preview["warnings"], "No scope warnings detected."),
             "artifact_links": render_markdown_artifact_links(preview["artifact_links"]),
             "groups": render_markdown_groups(preview["coverage"]["groups"]),
@@ -285,6 +321,38 @@ def render_warnings_section(warnings: list[str]) -> str:
         return '<div class="ready-state">Ready for execution review</div>'
     items = "".join(f"<li>{escape(item)}</li>" for item in warnings)
     return f'<div class="ready-state warning-state">Ready for execution review</div><ul class="warning-list">{items}</ul>'
+
+
+def render_confirmation_gate(readiness: dict) -> str:
+    questions = "".join(f"<li>{escape(item)}</li>" for item in readiness["blocking_questions"])
+    flags = [
+        ("Environment", readiness["environment"] or "Needs confirmation"),
+        ("Auth / access", "Needed" if readiness["requires_auth"] else "Not detected"),
+        ("OTP / MFA", "User-assisted" if readiness["requires_otp"] else "Not detected"),
+    ]
+    chips = "".join(f'<span class="chip">{escape(label)}: {escape(value)}</span>' for label, value in flags)
+    return (
+        '<div class="confirmation-gate">'
+        '<div class="ready-state hold-state">Confirmation Required</div>'
+        '<p>Do not start browser execution until the user confirms this scope and answers the blockers below.</p>'
+        f'<div class="chip-row">{chips}</div>'
+        f'<ul class="warning-list">{questions}</ul>'
+        "</div>"
+    )
+
+
+def render_markdown_confirmation_gate(readiness: dict) -> str:
+    lines = [
+        "- Status: `Confirmation Required`",
+        "- Stop rule: Do not start browser execution until the user confirms this scope.",
+        f"- Environment: `{readiness['environment'] or 'Needs confirmation'}`",
+        f"- Auth/access needed: `{yes_no(readiness['requires_auth'])}`",
+        f"- OTP/MFA handling needed: `{yes_no(readiness['requires_otp'])}`",
+        "",
+        "Questions before execution:",
+    ]
+    lines.extend(f"- {item}" for item in readiness["blocking_questions"])
+    return "\n".join(lines)
 
 
 def render_artifact_links(artifact_links: dict) -> str:
@@ -371,6 +439,61 @@ def render_markdown_artifact_links(artifact_links: dict) -> str:
     return "\n".join(rows)
 
 
+def build_execution_readiness(selected_cases: list[dict], *payloads: dict) -> dict:
+    environment = first_available_key(
+        payloads,
+        ("environment", "environment_url", "target_url", "base_url", "url"),
+    )
+    auth_required = any(case_has_keywords(case, AUTH_KEYWORDS) for case in selected_cases)
+    otp_required = any(case_has_keywords(case, OTP_KEYWORDS) for case in selected_cases)
+
+    questions = [
+        "Confirm that this scope and selected cases are correct, or describe what should change before execution.",
+    ]
+    if not environment:
+        questions.append("Provide the exact environment URL to test.")
+    if auth_required:
+        questions.append("Confirm the test account, role, credentials/access path, and any required test data.")
+    if otp_required:
+        questions.append(
+            "Confirm OTP/MFA handling. If the code is sent to your email or phone, stay available and provide the current code when QA Compass stops and asks for it."
+        )
+    questions.append("Confirm any feature flags, seed data, allowlists, or access constraints that could block the run.")
+
+    return {
+        "confirmation_required": True,
+        "must_stop_before_execution": True,
+        "environment": environment,
+        "requires_auth": auth_required,
+        "requires_otp": otp_required,
+        "blocking_questions": questions,
+    }
+
+
+def first_available_key(payloads: tuple[dict, ...], keys: tuple[str, ...]) -> str:
+    for payload in payloads:
+        for key in keys:
+            value = payload.get(key)
+            if value not in (None, "", [], {}):
+                return str(value)
+    return ""
+
+
+def case_has_keywords(case: dict, keywords: tuple[str, ...]) -> bool:
+    lowered = " ".join(
+        [
+            case.get("title", ""),
+            case.get("type", ""),
+            case.get("feature", ""),
+            case.get("module", ""),
+            " ".join(case.get("preconditions", [])),
+            " ".join(case.get("steps", [])),
+            " ".join(case.get("expected_results", [])),
+        ]
+    ).lower()
+    return any(keyword in lowered for keyword in keywords)
+
+
 def grouping_label(strategy: str) -> str:
     labels = {
         "feature": "Grouped by Feature",
@@ -386,6 +509,10 @@ def grouping_label(strategy: str) -> str:
 
 def format_counts(counts: dict) -> str:
     return ", ".join(f"{name} {count}" for name, count in sorted(counts.items())) or "None"
+
+
+def yes_no(value: bool) -> str:
+    return "yes" if value else "no"
 
 
 def first_value(*payloads: dict, key: str, default: str) -> str:

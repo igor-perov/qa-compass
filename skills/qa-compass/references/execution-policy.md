@@ -12,13 +12,38 @@ Reusable Playwright `.spec.ts` files are optional starter artifacts. They are fo
 
 Execution should reuse canonical artifacts when possible. Prefer existing `test-cases.json`, `execution-progress.json`, and `remaining-cases.json` before regenerating cases or re-ingesting source material.
 
-Before live browser validation starts, generate `qa-scope-preview.html`, `qa-scope-preview.md`, and `qa-scope-preview.json` from the selected test cases and ask the user to confirm that the grouped scope, selected cases, full test-case link, and warnings look right. Do not run the browser execution until the user confirms the scope, unless they already explicitly approved the selected cases in the same request.
+Before live browser validation starts, generate `qa-scope-preview.html`, `qa-scope-preview.md`, and `qa-scope-preview.json` from the selected test cases. Then stop and ask the user to confirm that the grouped scope, selected cases, full test-case link, execution readiness questions, and warnings look right. A prior request to `run`, `test`, or `execute` is not confirmation. Do not run browser execution until the user sends a follow-up confirmation after seeing the preview.
 
 ```bash
 npm install -g @playwright/cli@latest
 playwright-cli --help
 playwright-cli install --skills
 ```
+
+## Pre-Execution Confirmation Gate
+
+The scope preview is a hard gate, not a decorative artifact.
+
+At this gate, ask for:
+
+- confirmation that the selected scope and generated cases are correct, or requested changes
+- target environment URL when unknown
+- test account, role, access path, and required data for authenticated flows
+- feature flags, allowlists, seed data, or access constraints that could block execution
+- OTP/MFA handling if any selected case mentions OTP, MFA, verification code, email code, SMS code, or magic link
+
+Do not continue into browser execution in the same uninterrupted flow after creating the scope preview.
+
+## OTP/MFA Gate
+
+If a flow requires OTP, MFA, email code, SMS code, or magic link:
+
+- stop before entering or bypassing the code
+- ask the user for the current code or confirmation action
+- if the user's email or phone receives the code, tell them to check it and wait for the value
+- use the value only for the active browser step
+- never echo the code back, never store it in artifacts, and never include it in reports
+- do not mark the case blocked simply because the user was temporarily away; wait or record the case as paused until the user responds
 
 ## Preferred Execution Modes
 

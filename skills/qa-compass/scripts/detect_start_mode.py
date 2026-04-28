@@ -259,10 +259,13 @@ def detect_missing_blockers(lowered: str, source_mode: str, stage: str) -> list[
             blockers.append("confluence_credentials")
 
     if stage == "execute":
+        blockers.append("scope_preview_confirmation")
         if not has_any(lowered, ("http://", "https://")):
             blockers.append("environment_url")
         if has_any(lowered, ("login", "sign in", "authenticated", "otp", "register")):
             blockers.append("credentials_or_test_data")
+        if has_any(lowered, ("otp", "mfa", "2fa", "verification code", "email code", "sms code", "magic link")):
+            blockers.append("otp_mfa_handling")
 
     if source_mode in {"requirements_json", "test_cases_json", "markdown"}:
         if not has_any(lowered, (".json", ".md", "/", "\\")):

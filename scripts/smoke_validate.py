@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--with-pdf",
         action="store_true",
-        help="Also export the sample HTML report to PDF with playwright-cli or npx.",
+        help="Also export the sample external HTML report to qa-report.external.pdf with playwright-cli or npx.",
     )
     return parser.parse_args()
 
@@ -136,9 +136,9 @@ def main() -> None:
                     sys.executable,
                     str(FLAGSHIP_ROOT / "scripts" / "export_report_pdf.py"),
                     "--html",
-                    str(report_dir / "qa-report.html"),
+                    str(report_dir / "qa-report.external.html"),
                     "--pdf",
-                    str(report_dir / "qa-report.pdf"),
+                    str(report_dir / "qa-report.external.pdf"),
                     "--landscape",
                 ]
             )

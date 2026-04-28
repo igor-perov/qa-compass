@@ -93,10 +93,12 @@ Detailed rules live in:
 - Use `scripts/prepare_test_case_brief.py` only to reduce token spend and shape inputs.
 - When requirements are the source for case generation, explicitly resolve `full coverage` versus `smoke only` before generating the suite.
 - Reusable Playwright `.spec.ts` files are optional starter artifacts and should be grouped by feature or module when exported.
-- Before browser execution, generate a pre-execution scope preview when test cases or an execution subset are available. Share the preview artifact path and explicitly ask whether the scope and generated cases are acceptable or should be changed. Do not start execution until the user confirms, unless the user already gave explicit approval in the same request.
+- Scope Preview Stop Rule: before browser execution, generate a pre-execution scope preview when test cases or an execution subset are available, share the preview artifact path, and stop. A prior request to `run`, `test`, or `execute` is not confirmation. Do not start browser execution in the same uninterrupted flow after generating the preview; wait for a follow-up user message confirming the scope and cases or requesting changes.
+- At the scope-preview gate, ask for every blocker needed for execution: target environment URL if unknown, test account/access details if authenticated flows are in scope, required test data, feature flags/allowlists, and OTP/MFA handling if any selected case can trigger a code or magic link.
+- OTP/MFA Gate: if execution reaches an OTP, MFA, email-code, SMS-code, or magic-link step, stop and ask the user for the current code or confirmation flow. If the code is sent to the user's email or phone, tell them it should arrive there and wait for them to provide it. Never echo OTP values back, never store them in artifacts, and do not mark the case blocked simply because the user was temporarily away.
 - Every run should preserve reusable QA memory so future runs can reuse canonical artifacts before re-ingesting or regenerating.
 - Browser execution must use `playwright-cli`.
-- Do not generate PDF reports by default. Prefer HTML reports because they are more predictable; only run the PDF helper when the user explicitly asks for experimental PDF export.
+- Do not generate internal or combined PDF reports by default. Prefer HTML reports as canonical. When the user needs a client-shareable attachment, export `qa-report.external.pdf` from `qa-report.external.html` and verify the PDF snapshot before sharing it.
 - Generated `.spec.ts` files do not replace `playwright-cli` for live execution inside this skill.
 - Prefer canonical JSON artifacts first, then render markdown and HTML from them.
 - Keep reusable scripts and templates in this skill folder; create project-local files only for outputs and run artifacts.

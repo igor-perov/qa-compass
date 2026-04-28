@@ -30,7 +30,9 @@ QA Compass can help with:
 - `draft-defects`
 - `create-jira-defects` optional and confirmation-gated
 
-Before moving from `scope-preview` to `execute`, explicitly ask whether the scope and generated cases are acceptable or should be changed. Start browser execution only after the user confirms, unless the same request already gave explicit approval.
+Before moving from `scope-preview` to `execute`, explicitly ask whether the scope and generated cases are acceptable or should be changed. Treat the preview as a hard stop: a previous `run this` request is not enough. Start browser execution only after the user sends a follow-up confirmation after seeing the preview.
+
+At the same gate, ask for missing environment URL, test accounts/access, required data, feature flags/allowlists, and OTP/MFA handling for flows that send a code or magic link.
 
 ## Token Economy
 

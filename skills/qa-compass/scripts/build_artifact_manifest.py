@@ -204,7 +204,7 @@ KNOWN_ARTIFACTS = {
     },
     "qa-report.external.pdf": {
         "label": "External QA report PDF",
-        "description": "Experimental PDF export of the client-facing report; HTML is the canonical output.",
+        "description": "Client-shareable PDF snapshot exported from the external HTML report.",
         "created_by": "script_generated",
         "source_of_truth": False,
     },
