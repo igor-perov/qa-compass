@@ -48,6 +48,15 @@ SOURCE_PATTERNS = {
 }
 
 STAGE_PATTERNS = {
+    "run-diagnostics": (
+        "run diagnostics",
+        "qa compass run diagnostics",
+        "skill feedback report",
+        "support pack",
+        "developer diagnostics",
+        "debug handoff",
+        "debug report",
+    ),
     "draft-defects": (
         "draft jira bug",
         "draft jira bugs",
@@ -76,7 +85,7 @@ STAGE_PATTERNS = {
         "before execution",
         "before testing",
     ),
-    "execute": ("run", "rerun", "execute", "validate", "smoke", "high-priority", "high priority"),
+    "execute": ("run", "rerun", "execute", "validate", "smoke", "high-priority", "high priority", "full regression"),
     "generate-cases": (
         "test case",
         "test cases",
@@ -132,6 +141,18 @@ def detect_source_mode(lowered: str) -> str:
 def detect_stage(lowered: str) -> str:
     explicit_priority = (
         (
+            "run-diagnostics",
+            (
+                "run diagnostics",
+                "qa compass run diagnostics",
+                "skill feedback report",
+                "support pack",
+                "developer diagnostics",
+                "debug handoff",
+                "debug report",
+            ),
+        ),
+        (
             "draft-defects",
             (
                 "draft jira bug",
@@ -176,7 +197,7 @@ def detect_stage(lowered: str) -> str:
                 "before testing",
             ),
         ),
-        ("execute", ("run the top", "run ", "rerun", "execute", "smoke", "high-priority", "high priority")),
+        ("execute", ("run the top", "run ", "rerun", "execute", "smoke", "high-priority", "high priority", "full regression")),
         ("ingest", ("pull", "fetch", "parse", "import", "grab")),
     )
     for stage, patterns in explicit_priority:
@@ -197,6 +218,8 @@ def detect_stage(lowered: str) -> str:
 def detect_requested_output(lowered: str, stage: str, playwright_specs_requested: bool) -> str:
     if "pdf" in lowered and "html" in lowered:
         return "html_and_pdf_report"
+    if stage == "run-diagnostics":
+        return "run_diagnostics_report"
     if stage == "draft-defects":
         return "jira_bug_drafts"
     if stage == "generate-cases":
@@ -267,6 +290,9 @@ def detect_missing_blockers(lowered: str, source_mode: str, stage: str) -> list[
         if has_any(lowered, ("otp", "mfa", "2fa", "verification code", "email code", "sms code", "magic link")):
             blockers.append("otp_mfa_handling")
 
+    if stage == "run-diagnostics":
+        blockers.append("run_diagnostics_user_comments")
+
     if source_mode in {"requirements_json", "test_cases_json", "markdown"}:
         if not has_any(lowered, (".json", ".md", "/", "\\")):
             blockers.append("input_path_or_attachment")
@@ -284,6 +310,8 @@ def detect_execution_subset(lowered: str) -> dict:
         subset["limit"] = int(match.group(1))
     if "high-priority" in lowered or "high priority" in lowered:
         subset["mode"] = "high-priority"
+    elif "full regression" in lowered or "full-regression" in lowered:
+        subset["mode"] = "full-regression"
     elif "critical path" in lowered:
         subset["mode"] = "critical-path"
     elif "smoke" in lowered:
@@ -302,12 +330,13 @@ def has_any(lowered: str, patterns: tuple[str, ...]) -> bool:
 def stage_rank(stage: str) -> int:
     order = {
         "draft-defects": 0,
-        "report": 1,
-        "normalize": 2,
-        "generate-cases": 3,
-        "export-playwright-specs": 4,
-        "execute": 5,
-        "ingest": 6,
+        "run-diagnostics": 1,
+        "report": 2,
+        "normalize": 3,
+        "generate-cases": 4,
+        "export-playwright-specs": 5,
+        "execute": 6,
+        "ingest": 7,
     }
     return order.get(stage, 99)
 

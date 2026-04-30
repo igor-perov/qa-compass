@@ -10,6 +10,18 @@ from io_utils import render_template, write_json, write_text
 TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "templates"
 
 KNOWN_ARTIFACTS = {
+    "workspace-index.json": {
+        "label": "Workspace index",
+        "description": "Machine-readable QA Compass workspace v2 index with reusable paths, run history paths, and active canonical test case location.",
+        "created_by": "script_generated",
+        "source_of_truth": True,
+    },
+    "project-profile.json": {
+        "label": "Project profile",
+        "description": "Project-level metadata for repeated QA runs.",
+        "created_by": "script_generated",
+        "source_of_truth": True,
+    },
     "project-summary.md": {
         "label": "Project summary",
         "description": "AI-generated product understanding based on the source requirements.",
@@ -178,9 +190,45 @@ KNOWN_ARTIFACTS = {
         "created_by": "script_generated",
         "source_of_truth": True,
     },
+    "qa-compass-run-diagnostics.md": {
+        "label": "QA Compass run diagnostics",
+        "description": "Developer-facing Markdown handoff for diagnosing QA Compass run issues and local execution context.",
+        "created_by": "script_generated",
+        "source_of_truth": False,
+    },
+    "qa-compass-run-diagnostics.json": {
+        "label": "QA Compass run diagnostics payload",
+        "description": "Machine-readable source payload for the developer-facing run diagnostics report.",
+        "created_by": "script_generated",
+        "source_of_truth": True,
+    },
+    "run-config.json": {
+        "label": "Run configuration",
+        "description": "Machine-readable configuration for a specific execution run under runs/<run-id>.",
+        "created_by": "script_generated",
+        "source_of_truth": True,
+    },
+    "runs-index.json": {
+        "label": "Runs index",
+        "description": "Machine-readable history of repeated QA runs in this workspace.",
+        "created_by": "script_generated",
+        "source_of_truth": True,
+    },
+    "case-history.json": {
+        "label": "Case history",
+        "description": "Machine-readable latest status and counters per test case for rerun failed/blocked flows.",
+        "created_by": "script_generated",
+        "source_of_truth": True,
+    },
+    "migration-report.json": {
+        "label": "Migration report",
+        "description": "Non-destructive record of how a legacy single-run layout was converted into workspace v2.",
+        "created_by": "script_generated",
+        "source_of_truth": False,
+    },
     "qa-report.html": {
-        "label": "QA report",
-        "description": "Legacy combined HTML QA report.",
+        "label": "Legacy QA report",
+        "description": "Legacy combined HTML report from older QA Compass runs; new runs use separate internal and external reports.",
         "created_by": "script_generated",
         "source_of_truth": False,
     },

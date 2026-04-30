@@ -1,8 +1,8 @@
 interface:
   display_name: "QA Compass"
-  short_description: "Guide QA work from sources to reusable reports"
+  short_description: "Guide repeatable QA work from sources to reports"
   brand_color: "#1746A2"
-  default_prompt: "Use $qa-compass to turn requirements, Jira issues, Confluence pages, test cases, or execution results into QA artifacts, reports, and defect drafts."
+  default_prompt: "Use $qa-compass to turn requirements, Jira issues, Confluence pages, test cases, or execution results into reusable QA artifacts, repeated run reports, run diagnostics, and defect drafts."
 
 policy:
   allow_implicit_invocation: true

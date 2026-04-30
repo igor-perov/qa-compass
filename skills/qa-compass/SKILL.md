@@ -1,6 +1,6 @@
 ---
 name: qa-compass
-description: Use when requirements, Jira issues, Confluence pages, markdown specs, test cases, or execution results need to become QA artifacts, test coverage, browser validation, internal/external reports, or Jira-ready defect drafts.
+description: Use when requirements, Jira issues, Confluence pages, markdown specs, test cases, or execution results need to become QA artifacts, test coverage, browser validation, internal/external reports, run diagnostics, or Jira-ready defect drafts.
 ---
 
 # QA Compass
@@ -21,18 +21,23 @@ It is prompt-first where QA judgment is needed, but uses bundled scripts and can
 - The user pastes requirements text directly
 - The user only wants execution from existing test cases
 - The user only wants a report from existing execution results
+- The user wants QA Compass run diagnostics or a developer-facing support pack
 - The user wants Jira-ready bug drafts from confirmed defects
 
 ## Startup Contract
 
 1. Infer the likely source mode and stage with `scripts/detect_start_mode.py`.
-2. Always confirm:
+2. Resolve the output workspace before ingesting or generating:
+   - run `scripts/workspace_lifecycle.py detect --root <output-dir>` when a project artifact folder is available
+   - initialize workspace v2 for new projects
+   - migrate `legacy_single_run` layouts before continuing, reusing existing `00-03` artifacts
+3. Always confirm:
    - what the user wants to produce
    - what the source input is
-3. If generating cases from requirements, ask `full coverage or smoke only?` unless the request already answers it.
-4. If reusable automation artifacts would help, ask whether grouped Playwright `.spec.ts` starter files are wanted.
-5. Ask only the next blocker question.
-6. If the source and requested outcome are already clear, start immediately.
+4. If generating cases from requirements, ask `full coverage or smoke only?` unless the request already answers it.
+5. If reusable automation artifacts would help, ask whether grouped Playwright `.spec.ts` starter files are wanted.
+6. Ask only the next blocker question.
+7. If the source, workspace, and requested outcome are already clear, start immediately.
 
 ## Atlassian Connector Rule
 
@@ -65,6 +70,7 @@ For Jira writes:
 - `scope-preview`
 - `execute`
 - `report`
+- `run-diagnostics`
 - `draft-defects`
 - `create-jira-defects`
 
@@ -97,8 +103,14 @@ Detailed rules live in:
 - At the scope-preview gate, ask for every blocker needed for execution: target environment URL if unknown, test account/access details if authenticated flows are in scope, required test data, feature flags/allowlists, and OTP/MFA handling if any selected case can trigger a code or magic link.
 - OTP/MFA Gate: if execution reaches an OTP, MFA, email-code, SMS-code, or magic-link step, stop and ask the user for the current code or confirmation flow. If the code is sent to the user's email or phone, tell them it should arrive there and wait for them to provide it. Never echo OTP values back, never store them in artifacts, and do not mark the case blocked simply because the user was temporarily away.
 - Every run should preserve reusable QA memory so future runs can reuse canonical artifacts before re-ingesting or regenerating.
+- Use workspace v2 for repeated QA work: keep reusable project artifacts in `00-overview`, `01-sources`, `02-normalized`, and `03-generated`; put execution, reports, and evidence for each attempt under `runs/<run-id>/`.
+- If an older single-run layout is found, migrate it with `scripts/workspace_lifecycle.py migrate` before doing more work. Do not regenerate requirements, roles, groups, or test cases when reusable artifacts already exist.
+- Run Diagnostics Gate: generate `qa-compass-run-diagnostics.md` only when requested or when the user accepts an offer after a run. Before generating the final Markdown, ask whether the user wants to add comments or local observations. Redact secrets from user comments and collected diagnostics.
 - Browser execution must use `playwright-cli`.
 - Do not generate internal or combined PDF reports by default. Prefer HTML reports as canonical. When the user needs a client-shareable attachment, export `qa-report.external.pdf` from `qa-report.external.html` and verify the PDF snapshot before sharing it.
+- Keep report outputs distinct: `qa-report.internal.html` is the detailed team report, `qa-report.external.html` is the client-facing dashboard, and new runs should not create a generic `qa-report.html` alias.
+- Internal reports must list passed cases explicitly. When evidence exists, show it inside the related case; when no screenshot/evidence was captured, say that plainly instead of hiding the case.
+- Embed only bundled local evidence files in HTML reports. Protected remote screenshot URLs should be rendered as links so private assets do not appear as broken images or access-denied screenshots.
 - Generated `.spec.ts` files do not replace `playwright-cli` for live execution inside this skill.
 - Prefer canonical JSON artifacts first, then render markdown and HTML from them.
 - Keep reusable scripts and templates in this skill folder; create project-local files only for outputs and run artifacts.
@@ -116,10 +128,12 @@ Detailed rules live in:
 - `scripts/prepare_test_case_brief.py`
 - `scripts/propose_grouping.py`
 - `scripts/export_playwright_specs.py`
+- `scripts/workspace_lifecycle.py`
 - `scripts/select_execution_subset.py`
 - `scripts/build_scope_preview.py`
 - `scripts/build_report_bundle.py`
 - `scripts/build_artifact_manifest.py`
+- `scripts/build_run_diagnostics.py`
 - `scripts/draft_jira_bugs.py`
 - `scripts/export_report_pdf.py`
 

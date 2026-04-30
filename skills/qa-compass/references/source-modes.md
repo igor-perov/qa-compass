@@ -138,6 +138,8 @@ Before ingesting the same scope again, check for reusable QA memory artifacts de
 
 If canonical artifacts already exist and the user wants to continue, execute, report, or draft defects, start from those artifacts instead of re-reading every source.
 
+For repeated runs, detect workspace v2 before source intake. If `workspace-index.json` exists, use `03-generated/test-cases.json`, `02-normalized/roles.json`, `02-normalized/grouping-proposal.json`, and `history/case-history.json` before asking for source details again. If a legacy single-run layout exists, migrate it first and reuse its `00-03` artifacts.
+
 ## Skip Rules
 
 - Skip Confluence questions if the source is JSON, markdown, or pasted text.

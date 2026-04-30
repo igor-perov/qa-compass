@@ -74,6 +74,11 @@ class SubsetSelectionTests(unittest.TestCase):
         self.assertIn("TC-AUTH-F-001", ids)
         self.assertIn("TC-ST1-F-001", ids)
 
+    def test_selects_full_regression_subset(self):
+        subset = select_subset(self.cases, mode="full-regression")
+        self.assertEqual(len(subset), len(self.cases))
+        self.assertEqual(subset[0]["priority"], "High")
+
     def test_selects_rerun_failed_subset(self):
         subset = select_subset(self.cases, mode="rerun-failed")
         self.assertEqual([case["test_case_id"] for case in subset], ["TC-ST1-F-001"])
@@ -81,6 +86,20 @@ class SubsetSelectionTests(unittest.TestCase):
     def test_selects_rerun_blocked_subset(self):
         subset = select_subset(self.cases, mode="rerun-blocked")
         self.assertEqual([case["test_case_id"] for case in subset], ["TC-ST1-ERR-001"])
+
+    def test_selects_rerun_subset_from_case_history(self):
+        case_history = {
+            "cases": {
+                "TC-AUTH-F-001": {"last_status": "Failed", "last_run_id": "2026-05-01-smoke"},
+                "TC-AUTH-ERR-001": {"last_status": "Blocked", "last_run_id": "2026-05-01-smoke"},
+            }
+        }
+
+        failed_subset = select_subset(self.cases, mode="rerun-failed", case_history=case_history)
+        blocked_subset = select_subset(self.cases, mode="rerun-blocked", case_history=case_history)
+
+        self.assertEqual([case["test_case_id"] for case in failed_subset], ["TC-AUTH-F-001"])
+        self.assertEqual([case["test_case_id"] for case in blocked_subset], ["TC-AUTH-ERR-001"])
 
 
 if __name__ == "__main__":

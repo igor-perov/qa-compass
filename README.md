@@ -18,12 +18,15 @@ QA Compass can:
 - propose grouping by feature, module, epic, role, source section, or custom strategy
 - generate traceable test cases from requirements
 - preserve the embedded test-case generation rules as the quality baseline
-- select execution subsets such as smoke, top priority, critical path, rerun failed, or rerun blocked
+- select execution subsets such as smoke, full regression, top priority, critical path, rerun failed, or rerun blocked
+- separate stable project memory from repeated execution runs
+- migrate older single-run output folders into the repeatable workspace layout
 - generate a pre-execution scope preview and stop for explicit confirmation before browser execution starts
 - guide browser validation with `playwright-cli`
 - optionally export grouped Playwright `.spec.ts` starter files
 - generate internal HTML reports with evidence and artifact legends
 - generate cleaner external reports for client or stakeholder sharing
+- optionally collect developer-facing run diagnostics for QA Compass feedback
 - draft Jira-ready bugs from confirmed failures
 - keep reusable QA memory so future runs can continue from existing artifacts
 
@@ -93,8 +96,36 @@ Use pasted text for quick one-off analysis, small specs, or early drafts.
 
 QA Compass is artifact-first. Important outputs are designed to be reused in later runs.
 
+For repeated QA work, QA Compass uses workspace v2:
+
+```text
+qa-compass-output/
+  workspace-index.json
+  project-profile.json
+  00-overview/
+  01-sources/
+  02-normalized/
+  03-generated/
+    suites/
+    versions/
+  runs/
+    <run-id>/
+      run-config.json
+      04-execution/
+      05-reports/
+      06-diagnostics/
+      evidence/
+  history/
+    runs-index.json
+    case-history.json
+```
+
+`00-03` are stable project memory. Each smoke, regression, rerun, or custom execution gets its own `runs/<run-id>/` folder. This keeps long-lived test coverage separate from one-off execution evidence and reports.
+
 Common artifacts include:
 
+- `workspace-index.json`: workspace v2 index and canonical artifact paths
+- `project-profile.json`: project metadata for repeated QA runs
 - `project-summary.md`: AI-generated understanding of what the product appears to do
 - `requirements-normalized.json`: canonical requirements
 - `confluence-intake-diagnostics.json`: non-sensitive Confluence discovery diagnostics
@@ -107,7 +138,11 @@ Common artifacts include:
 - `qa-scope-preview.md`: readable selected scope preview
 - `execution-progress.json`: execution state for continuation
 - `remaining-cases.json`: cases not yet executed
+- `runs-index.json`: history of repeated runs
+- `case-history.json`: latest status and counters per test case
 - `run-summary.json`: machine-readable execution summary
+- `qa-compass-run-diagnostics.md`: optional developer-facing diagnostics handoff for QA Compass run feedback
+- `qa-compass-run-diagnostics.json`: machine-readable diagnostics source payload
 - `qa-report.internal.html`: detailed team-facing report
 - `qa-report.external.html`: stakeholder-facing report
 - `qa-report.external.pdf`: optional client snapshot exported from the external HTML report
@@ -117,17 +152,25 @@ Common artifacts include:
 
 Scope previews show selected versus total cases, grouping, priority/type mix, warnings, readiness questions, a grouped selected-case list, and links to the full test-case source. Browser execution should start only after the user confirms the preview and supplies missing environment/access/OTP details.
 
-Internal reports include an expandable generated-files legend with a folder-aware tree, links to generated files, and a short purpose description for every file in the report bundle.
+Internal reports include an expandable generated-files legend with a simple linked file list and a short purpose description for every file in the report bundle. Passed cases are listed as their own section, with screenshots inside the case when evidence exists and a clear no-evidence note when it does not.
+
+If QA Compass finds an older output layout where `04-execution` and `05-reports` live at the root, it can migrate that folder into workspace v2, preserving existing sources, normalized requirements, roles, grouping, and generated test cases so the next run does not repeat work.
 
 ## Reports
 
 QA Compass produces one pre-execution review and two post-execution report styles:
 
 - **Scope preview**: pre-execution HTML/Markdown/JSON review of what will be tested, grouped by the confirmed strategy.
-- **Internal report**: detailed QA report for the delivery team, including roles, evidence, executed steps, defects, blockers, and generated artifact links.
+- **Internal report**: detailed QA report for the delivery team, including roles, passed cases, case-level evidence, executed steps, defects, blockers, and generated artifact links.
 - **External report**: cleaner executive-style report for clients and stakeholders, focused on scope, status, key metrics, confirmed defects, and blockers.
 
 HTML reports are the canonical output because they render most predictably. For client sharing, QA Compass can also export a verified PDF snapshot from the external HTML report.
+
+## Run Diagnostics
+
+When colleagues are testing QA Compass itself, they can ask for a **QA Compass Run Diagnostics** report after a run. This creates a developer-facing Markdown handoff under `runs/<run-id>/06-diagnostics/`.
+
+Before generating the final Markdown, QA Compass should ask whether the user wants to add comments: what looked wrong, what they expected, what they did manually, or which local environment detail might matter. The generated diagnostics report redacts tokens, passwords, cookies, authorization headers, and OTP values.
 
 ## Jira Defect Flow
 
@@ -151,6 +194,8 @@ QA Compass reduces token spend by using scripts and canonical files for mechanic
 - build JQL plans
 - prepare compact test-case generation briefs
 - select execution subsets
+- create or migrate workspace v2 folders
+- update case history for rerun failed/blocked flows
 - render pre-execution scope previews
 - render reports
 - generate artifact manifests
@@ -250,11 +295,23 @@ Use $qa-compass to run the top 5 high-priority cases from this test-cases JSON o
 ```
 
 ```text
+Use $qa-compass to run smoke again from the existing QA Compass workspace.
+```
+
+```text
+Use $qa-compass to rerun failed cases from the previous run.
+```
+
+```text
 Use $qa-compass to turn these execution results into internal and external QA reports.
 ```
 
 ```text
 Use $qa-compass to draft Jira bugs for the confirmed defects in this run.
+```
+
+```text
+Use $qa-compass to collect QA Compass Run Diagnostics for the previous run.
 ```
 
 ## Repo Layout

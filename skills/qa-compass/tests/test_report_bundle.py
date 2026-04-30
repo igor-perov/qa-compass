@@ -23,7 +23,7 @@ class ReportBundleTests(unittest.TestCase):
             self.assertIn("execution-plan.md", generated)
             self.assertIn("execution-results.md", generated)
             self.assertIn("run-summary.json", generated)
-            self.assertIn("qa-report.html", generated)
+            self.assertNotIn("qa-report.html", generated)
             self.assertIn("qa-report.internal.html", generated)
             self.assertIn("qa-report.external.html", generated)
 
@@ -40,19 +40,6 @@ class ReportBundleTests(unittest.TestCase):
             self.assertIn("POST /api/signup/validate-email", summary["defects"][0]["network_errors"][0])
             self.assertEqual(summary["defects"][0]["browser_context"]["browser"], "Chrome")
 
-            html = (Path(tmpdir) / "qa-report.html").read_text(encoding="utf-8")
-            self.assertIn("pie-chart", html)
-            self.assertIn("conic-gradient", html)
-            self.assertIn("Execution Overview", html)
-            self.assertIn("Grouped by Feature", html)
-            self.assertIn("Authentication", html)
-            self.assertIn("Company Data", html)
-            self.assertIn("Confirmed Defects", html)
-            self.assertIn("Evidence Gallery", html)
-            self.assertIn("TC-AUTH-ERR-001", html)
-            self.assertIn("The flow accepted a public email domain and allowed progression.", html)
-            self.assertIn("evidence/public-email-failure.png", html)
-
             internal_html = (Path(tmpdir) / "qa-report.internal.html").read_text(encoding="utf-8")
             self.assertIn("<details", internal_html)
             self.assertIn("Generated files and artifact legend", internal_html)
@@ -60,8 +47,8 @@ class ReportBundleTests(unittest.TestCase):
             self.assertIn('class="artifact-list"', internal_html)
             self.assertIn('href="execution-plan.md"', internal_html)
             self.assertIn('href="qa-report.external.html"', internal_html)
-            self.assertIn('href="qa-report.html"', internal_html)
-            self.assertIn("Legacy combined HTML QA report.", internal_html)
+            self.assertNotIn('href="qa-report.html"', internal_html)
+            self.assertNotIn("Legacy combined HTML QA report.", internal_html)
             self.assertLess(
                 internal_html.index("Generated files and artifact legend"),
                 internal_html.index("Execution Overview"),
@@ -79,8 +66,9 @@ class ReportBundleTests(unittest.TestCase):
             self.assertIn("transform: rotate(-135deg);", internal_html)
             self.assertNotIn('content: "Open"', internal_html)
             self.assertNotIn('content: "Close"', internal_html)
-            self.assertIn("Evidence Gallery", internal_html)
+            self.assertIn("Passed Cases", internal_html)
             self.assertIn("TC-AUTH-ERR-001", internal_html)
+            self.assertIn("TC-AUTH-F-001", internal_html)
             self.assertIn('<section class="execution-group">', internal_html)
             self.assertIn("2 cases", internal_html)
             self.assertLess(
@@ -105,6 +93,7 @@ class ReportBundleTests(unittest.TestCase):
             self.assertIn("https://develop.example.test/signup", internal_html)
 
             external_html = (Path(tmpdir) / "qa-report.external.html").read_text(encoding="utf-8")
+            self.assertNotEqual(internal_html, external_html)
             self.assertIn("Executive QA Dashboard", external_html)
             self.assertIn("outcome-chart", external_html)
             self.assertIn("conic-gradient", external_html)
@@ -117,7 +106,37 @@ class ReportBundleTests(unittest.TestCase):
             self.assertIn("TC-AUTH-ERR-001", external_html)
             self.assertIn("@media (max-width: 760px)", external_html)
             self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", external_html)
-            self.assertNotIn("Evidence Gallery", external_html)
+            self.assertNotIn("Passed Cases", external_html)
+
+    def test_report_bundle_lists_passed_cases_even_without_evidence(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            payload = json.loads((self.FIXTURES_DIR / "sample_execution_results.json").read_text(encoding="utf-8"))
+            payload["results"][0]["evidence"] = []
+            payload_path = Path(tmpdir) / "execution-results.json"
+            payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
+            output_dir = Path(tmpdir) / "report"
+            build_report_bundle.build_report_bundle(str(payload_path), str(output_dir))
+
+            internal_html = (output_dir / "qa-report.internal.html").read_text(encoding="utf-8")
+            self.assertIn("Passed Cases", internal_html)
+            self.assertIn("Register with a valid work email", internal_html)
+            self.assertIn("No screenshot or evidence was captured for this passed case.", internal_html)
+
+    def test_report_bundle_does_not_embed_remote_evidence_as_image(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            payload = json.loads((self.FIXTURES_DIR / "sample_execution_results.json").read_text(encoding="utf-8"))
+            remote_url = "https://private.example.test/screenshots/passed.png"
+            payload["results"][0]["evidence"] = [remote_url]
+            payload_path = Path(tmpdir) / "execution-results.json"
+            payload_path.write_text(json.dumps(payload), encoding="utf-8")
+
+            output_dir = Path(tmpdir) / "report"
+            build_report_bundle.build_report_bundle(str(payload_path), str(output_dir))
+
+            internal_html = (output_dir / "qa-report.internal.html").read_text(encoding="utf-8")
+            self.assertIn(f'href="{remote_url}"', internal_html)
+            self.assertNotIn(f'src="{remote_url}"', internal_html)
 
     def test_report_bundle_copies_local_evidence_and_lists_all_artifacts(self):
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -145,7 +164,7 @@ class ReportBundleTests(unittest.TestCase):
             self.assertIn('href="evidence/screen%20shot.png"', internal_html)
             self.assertIn("Generated run artifact.", internal_html)
 
-    def test_report_bundle_promotes_screenshot_fields_into_evidence_gallery(self):
+    def test_report_bundle_promotes_screenshot_fields_into_case_evidence(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             input_dir = root / "input"
@@ -227,6 +246,42 @@ class ReportBundleTests(unittest.TestCase):
             self.assertIn("requirements-raw.json", internal_html)
             self.assertIn('href="../01-sources/requirements-raw.json"', internal_html)
             self.assertIn("Imported source requirements.", internal_html)
+
+    def test_report_bundle_reads_workspace_manifest_from_run_report_dir(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            workspace_dir = Path(tmpdir) / "workspace"
+            overview_dir = workspace_dir / "00-overview"
+            generated_dir = workspace_dir / "03-generated"
+            report_dir = workspace_dir / "runs" / "2026-05-01-smoke" / "05-reports"
+            overview_dir.mkdir(parents=True)
+            generated_dir.mkdir(parents=True)
+            report_dir.mkdir(parents=True)
+            (workspace_dir / "workspace-index.json").write_text('{"schema_version":"2.0"}', encoding="utf-8")
+            (generated_dir / "test-cases.json").write_text("{}", encoding="utf-8")
+            (overview_dir / "artifact-manifest.json").write_text(
+                json.dumps(
+                    {
+                        "run_dir": str(workspace_dir),
+                        "artifacts": [
+                            {
+                                "path": "03-generated/test-cases.json",
+                                "description": "Canonical reusable cases for future runs.",
+                            }
+                        ],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            build_report_bundle.build_report_bundle(
+                str(self.FIXTURES_DIR / "sample_execution_results.json"),
+                str(report_dir),
+            )
+
+            internal_html = (report_dir / "qa-report.internal.html").read_text(encoding="utf-8")
+            self.assertIn("03-generated/test-cases.json", internal_html)
+            self.assertIn('href="../../../03-generated/test-cases.json"', internal_html)
+            self.assertIn("Canonical reusable cases for future runs.", internal_html)
 
 
 if __name__ == "__main__":

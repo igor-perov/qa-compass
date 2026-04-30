@@ -10,7 +10,15 @@ Browser execution must use `playwright-cli`.
 
 Reusable Playwright `.spec.ts` files are optional starter artifacts. They are for reuse and refinement, not a replacement for `playwright-cli` execution inside this workflow.
 
-Execution should reuse canonical artifacts when possible. Prefer existing `test-cases.json`, `execution-progress.json`, and `remaining-cases.json` before regenerating cases or re-ingesting source material.
+Execution should reuse canonical artifacts when possible. Prefer existing `03-generated/test-cases.json`, `history/case-history.json`, `execution-progress.json`, and `remaining-cases.json` before regenerating cases or re-ingesting source material.
+
+For repeated QA work, create a fresh run folder before scope preview:
+
+```bash
+python3 scripts/workspace_lifecycle.py create-run --root <output-dir> --suite smoke --mode smoke
+```
+
+Write execution artifacts under `runs/<run-id>/04-execution/` and reports under `runs/<run-id>/05-reports/`.
 
 Before live browser validation starts, generate `qa-scope-preview.html`, `qa-scope-preview.md`, and `qa-scope-preview.json` from the selected test cases. Then stop and ask the user to confirm that the grouped scope, selected cases, full test-case link, execution readiness questions, and warnings look right. A prior request to `run`, `test`, or `execute` is not confirmation. Do not run browser execution until the user sends a follow-up confirmation after seeing the preview.
 
@@ -52,6 +60,8 @@ If a flow requires OTP, MFA, email code, SMS code, or magic link:
 - `critical-path`
 - `rerun-failed`
 - `rerun-blocked`
+- `full-regression`
+- `custom`
 
 ## Status Taxonomy
 
@@ -86,6 +96,7 @@ Each executed case should capture:
 - Prioritize `High` before `Medium` before `Low`
 - Prefer core functional and critical-path flows first
 - Include error-handling cases only when requested or when they belong to the default smoke/high-priority slice
+- For rerun modes, use `history/case-history.json` as the authoritative last-status source when available.
 - Keep selection deterministic so reruns are easy to compare
 
 ## Defect Rule
@@ -113,5 +124,7 @@ When execution is partial, interrupted, blocked, or intentionally batched, prese
 
 - `execution-progress.json`
 - `remaining-cases.json`
+- `history/case-history.json`
+- `history/runs-index.json`
 
 These files let a future run continue without spending tokens rediscovering which cases were already handled.

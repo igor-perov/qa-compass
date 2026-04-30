@@ -102,6 +102,7 @@ STAGES = {
     "scope-preview",
     "execute",
     "report",
+    "run-diagnostics",
     "draft-defects",
     "create-jira-defects",
 }

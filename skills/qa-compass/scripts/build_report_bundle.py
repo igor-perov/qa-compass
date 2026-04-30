@@ -132,7 +132,6 @@ def build_report_bundle(input_path: str, output_dir: str) -> dict:
     write_text(destination / "qa-report.external.html", external_html_report)
     internal_html_report = render_internal_html_report(report_input, destination)
     write_text(destination / "qa-report.internal.html", internal_html_report)
-    write_text(destination / "qa-report.html", internal_html_report)
     return run_summary
 
 
@@ -238,7 +237,7 @@ def render_html_report(report_input: dict) -> str:
             "results_sections": render_results_sections(report_input["results"], report_input["grouping_strategy"]),
             "blocked_cases_section": render_blocked_section(report_input["blocked_cases"]),
             "defect_section": render_defect_section(report_input["defects"]),
-            "evidence_panels": render_evidence_panels(report_input["results"]),
+            "passed_cases_section": render_passed_cases_section(report_input["results"]),
         },
     )
 
@@ -288,7 +287,6 @@ def discover_report_artifacts(output_dir: Path | None = None) -> list[tuple[str,
         "run-summary.json",
         "qa-report.external.html",
         "qa-report.internal.html",
-        "qa-report.html",
     ]
     if output_dir is None:
         return [(path, artifact_description(path)) for path in expected_report_artifacts]
@@ -313,23 +311,36 @@ def discover_report_artifacts(output_dir: Path | None = None) -> list[tuple[str,
             artifacts.setdefault(relative_path, artifact_description(relative_path))
 
     for path in expected_report_artifacts:
-        if (output_dir / path).exists() or path in {"qa-report.internal.html", "qa-report.html"}:
+        if (output_dir / path).exists() or path == "qa-report.internal.html":
             artifacts.setdefault(path, artifact_description(path))
 
     return sorted(artifacts.items(), key=lambda item: item[0].lower())
 
 
 def artifact_manifest_paths(output_dir: Path) -> list[tuple[Path, Path]]:
-    return [
+    candidates = [
         (output_dir / "artifact-manifest.json", output_dir),
         (output_dir / "00-overview" / "artifact-manifest.json", output_dir),
         (output_dir.parent / "artifact-manifest.json", output_dir.parent),
         (output_dir.parent / "00-overview" / "artifact-manifest.json", output_dir.parent),
     ]
+    for ancestor in output_dir.resolve().parents:
+        candidates.append((ancestor / "artifact-manifest.json", ancestor))
+        candidates.append((ancestor / "00-overview" / "artifact-manifest.json", ancestor))
+
+    unique_candidates = []
+    seen = set()
+    for manifest_path, manifest_root in candidates:
+        key = (manifest_path, manifest_root)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_candidates.append((manifest_path, manifest_root))
+    return unique_candidates
 
 
 def relative_artifact_link(artifact_path: Path, output_dir: Path) -> str:
-    return Path(os.path.relpath(artifact_path, output_dir)).as_posix()
+    return Path(os.path.relpath(artifact_path.resolve(), output_dir.resolve())).as_posix()
 
 
 def artifact_description(path: str) -> str:
@@ -542,23 +553,38 @@ def render_defect_section(defects: list[dict]) -> str:
     return "\n".join(cards)
 
 
-def render_evidence_panels(results: list[dict]) -> str:
-    panels = []
-    for item in results:
-        evidence = item.get("evidence") or []
-        if not evidence:
-            continue
-        panels.append(
-            "<article class=\"evidence-panel\">"
-            f"<div class=\"issue-head\"><h3>{escape(item.get('test_case_id', ''))}</h3><span class=\"status {escape(item.get('status', 'Unknown'))}\">{escape(item.get('status', 'Unknown'))}</span></div>"
+def render_passed_cases_section(results: list[dict]) -> str:
+    passed_cases = [item for item in results if item.get("status") == "Passed"]
+    if not passed_cases:
+        return '<div class="empty-state">No passed cases were recorded in this run.</div>'
+
+    cards = []
+    for item in passed_cases:
+        cards.append(
+            "<article class=\"issue-card passed\">"
+            f"<div class=\"issue-head\"><h3>{escape(item.get('test_case_id', ''))}</h3><span class=\"status Passed\">Passed</span></div>"
             f"<h4>{escape(item.get('title', ''))}</h4>"
             f"{render_case_meta_chips(item)}"
-            f"{render_evidence_gallery(evidence, item.get('title', 'Evidence'))}"
+            "<div class=\"detail-block\">"
+            "<span class=\"detail-label\">Steps executed</span>"
+            f"{render_step_list(item.get('executed_steps', []))}"
+            "</div>"
+            f"{render_notes_block(item.get('notes', []))}"
+            f"{render_passed_case_evidence(item.get('evidence', []))}"
             "</article>"
         )
-    if not panels:
-        return '<div class="empty-state">No evidence references were captured.</div>'
-    return "\n".join(panels)
+    return "\n".join(cards)
+
+
+def render_passed_case_evidence(evidence: list[str]) -> str:
+    if evidence:
+        return render_evidence_block(evidence)
+    return (
+        "<div class=\"detail-block\">"
+        "<span class=\"detail-label\">Evidence</span>"
+        '<div class="empty-state">No screenshot or evidence was captured for this passed case.</div>'
+        "</div>"
+    )
 
 
 def render_step_list(steps: list[str]) -> str:
@@ -655,7 +681,7 @@ def render_evidence_gallery(evidence: list[str], title: str) -> str:
     for ref in evidence:
         safe_ref = escape(url_ref(ref))
         label = escape(Path(ref).name or ref)
-        if is_image_reference(ref):
+        if is_embeddable_image_reference(ref):
             items.append(
                 "<figure class=\"evidence-item image\">"
                 f"<a href=\"{safe_ref}\"><img src=\"{safe_ref}\" alt=\"{escape(title)}\" /></a>"
@@ -907,6 +933,17 @@ def build_pie_chart_style(counts: dict) -> str:
 def is_image_reference(reference: str) -> bool:
     lowered = str(reference).lower()
     return lowered.endswith(IMAGE_EXTENSIONS)
+
+
+def is_embeddable_image_reference(reference: str) -> bool:
+    if not is_image_reference(reference):
+        return False
+    if is_remote_reference(reference):
+        return False
+    parsed = urlparse(reference)
+    if parsed.scheme == "file":
+        return False
+    return str(reference).replace("\\", "/").startswith("evidence/")
 
 
 def first_image_reference(evidence: list[str]) -> str:

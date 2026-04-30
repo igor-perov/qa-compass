@@ -100,7 +100,7 @@ def served_directory(directory: Path):
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Export an HTML QA report to PDF using playwright-cli.")
-    parser.add_argument("--html", required=True, help="Path to qa-report.html")
+    parser.add_argument("--html", required=True, help="Path to the HTML report, usually qa-report.external.html")
     parser.add_argument("--pdf", required=True, help="Path to write qa-report.pdf")
     parser.add_argument("--landscape", action="store_true", help="Force landscape print CSS before export")
     args = parser.parse_args()

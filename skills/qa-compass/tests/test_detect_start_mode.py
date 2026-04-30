@@ -55,6 +55,11 @@ class DetectStartModeTests(unittest.TestCase):
         self.assertIn("scope_preview_confirmation", payload["missing_blockers"])
         self.assertIn("environment_url", payload["missing_blockers"])
 
+    def test_detects_full_regression_execution_subset(self):
+        payload = detect_start_mode("Run full regression again from the existing QA Compass workspace")
+        self.assertEqual(payload["stage"], "execute")
+        self.assertEqual(payload["execution_subset"]["mode"], "full-regression")
+
     def test_execute_request_with_otp_requires_otp_handling(self):
         payload = detect_start_mode("Run registration cases with OTP on https://staging.example.test")
         self.assertEqual(payload["stage"], "execute")
@@ -81,6 +86,12 @@ class DetectStartModeTests(unittest.TestCase):
         payload = detect_start_mode("Turn these execution results into an HTML and PDF stakeholder report")
         self.assertEqual(payload["stage"], "report")
         self.assertEqual(payload["source_mode"], "pasted_text")
+
+    def test_detects_run_diagnostics_request(self):
+        payload = detect_start_mode("Collect a QA Compass Run Diagnostics report for the previous run")
+        self.assertEqual(payload["stage"], "run-diagnostics")
+        self.assertEqual(payload["requested_output"], "run_diagnostics_report")
+        self.assertIn("run_diagnostics_user_comments", payload["missing_blockers"])
 
     def test_detects_jira_bug_draft_request(self):
         payload = detect_start_mode("Draft Jira bugs from these failed execution results")
