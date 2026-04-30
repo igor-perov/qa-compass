@@ -107,7 +107,8 @@ Detailed rules live in:
 - If an older single-run layout is found, migrate it with `scripts/workspace_lifecycle.py migrate` before doing more work. Do not regenerate requirements, roles, groups, or test cases when reusable artifacts already exist.
 - Run Diagnostics Gate: generate `qa-compass-run-diagnostics.md` only when requested or when the user accepts an offer after a run. Before generating the final Markdown, ask whether the user wants to add comments or local observations. Redact secrets from user comments and collected diagnostics.
 - Browser execution must use `playwright-cli`.
-- Do not generate internal or combined PDF reports by default. Prefer HTML reports as canonical. When the user needs a client-shareable attachment, export `qa-report.external.pdf` from `qa-report.external.html` and verify the PDF snapshot before sharing it.
+- Do not generate internal or combined PDF reports by default. Prefer HTML reports as canonical, but always export and verify `qa-report.external.pdf` from `qa-report.external.html` as part of the standard report stage.
+- Do not call the report stage complete until `qa-report.external.pdf` exists, unless the user explicitly accepts a development-only `--skip-pdf` exception after a tooling failure.
 - Keep report outputs distinct: `qa-report.internal.html` is the detailed team report, `qa-report.external.html` is the client-facing dashboard, and new runs should not create a generic `qa-report.html` alias.
 - Internal reports must list passed cases explicitly. When evidence exists, show it inside the related case; when no screenshot/evidence was captured, say that plainly instead of hiding the case.
 - Embed only bundled local evidence files in HTML reports. Protected remote screenshot URLs should be rendered as links so private assets do not appear as broken images or access-denied screenshots.

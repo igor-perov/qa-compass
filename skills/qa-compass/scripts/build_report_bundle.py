@@ -12,8 +12,10 @@ from io_utils import read_json, render_template, write_json, write_text
 
 try:
     from build_artifact_manifest import KNOWN_ARTIFACTS, default_metadata
+    from export_report_pdf import export_report_pdf
 except ImportError:  # pragma: no cover - direct script fallback
     KNOWN_ARTIFACTS = {}
+    export_report_pdf = None
 
     def default_metadata(filename: str) -> dict:
         return {
@@ -97,7 +99,7 @@ def classify_defects(results: list[dict]) -> list[dict]:
     return defects
 
 
-def build_report_bundle(input_path: str, output_dir: str) -> dict:
+def build_report_bundle(input_path: str, output_dir: str, export_pdf: bool = False) -> dict:
     payload = read_json(input_path)
     destination = Path(output_dir)
     destination.mkdir(parents=True, exist_ok=True)
@@ -128,11 +130,26 @@ def build_report_bundle(input_path: str, output_dir: str) -> dict:
 
     write_text(destination / "execution-plan.md", execution_plan)
     write_text(destination / "execution-results.md", execution_results)
-    write_json(destination / "run-summary.json", run_summary)
     write_text(destination / "qa-report.external.html", external_html_report)
+
+    if export_pdf:
+        pdf_path = export_external_pdf_report(destination)
+        run_summary["external_pdf"] = pdf_path.name
+
+    write_json(destination / "run-summary.json", run_summary)
     internal_html_report = render_internal_html_report(report_input, destination)
     write_text(destination / "qa-report.internal.html", internal_html_report)
     return run_summary
+
+
+def export_external_pdf_report(output_dir: Path) -> Path:
+    if export_report_pdf is None:
+        raise RuntimeError("PDF export is unavailable because export_report_pdf.py could not be imported.")
+    return export_report_pdf(
+        str(output_dir / "qa-report.external.html"),
+        str(output_dir / "qa-report.external.pdf"),
+        landscape=True,
+    )
 
 
 def build_run_summary(report_input: dict) -> dict:
@@ -964,9 +981,17 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Build markdown, JSON, and HTML report artifacts from execution results.")
     parser.add_argument("--input", required=True, help="Path to execution results JSON.")
     parser.add_argument("--output-dir", required=True, help="Directory to write the report bundle.")
+    parser.add_argument(
+        "--skip-pdf",
+        action="store_true",
+        help="Development escape hatch: skip the mandatory external PDF snapshot.",
+    )
     args = parser.parse_args()
-    summary = build_report_bundle(args.input, args.output_dir)
-    print(json.dumps({"output_dir": args.output_dir, "counts": summary["counts"]}, indent=2))
+    summary = build_report_bundle(args.input, args.output_dir, export_pdf=not args.skip_pdf)
+    output = {"output_dir": args.output_dir, "counts": summary["counts"]}
+    if summary.get("external_pdf"):
+        output["external_pdf"] = str(Path(args.output_dir) / summary["external_pdf"])
+    print(json.dumps(output, indent=2))
 
 
 if __name__ == "__main__":

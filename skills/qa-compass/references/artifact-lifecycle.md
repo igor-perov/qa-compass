@@ -68,6 +68,9 @@ Use `scripts/workspace_lifecycle.py detect --root <output-dir>` before starting 
 - `runs/<run-id>/04-execution/execution-progress.json`: completed, skipped, blocked, and remaining execution state.
 - `runs/<run-id>/04-execution/remaining-cases.json`: cases suitable for a later continuation run.
 - `runs/<run-id>/05-reports/run-summary.json`: summary metrics and defect/blocker state.
+- `runs/<run-id>/05-reports/qa-report.internal.html`: detailed team-facing report.
+- `runs/<run-id>/05-reports/qa-report.external.html`: canonical client-facing HTML report.
+- `runs/<run-id>/05-reports/qa-report.external.pdf`: required client-shareable PDF snapshot exported from the external HTML report.
 - `runs/<run-id>/06-diagnostics/qa-compass-run-diagnostics.md`: developer-facing Markdown handoff for skill feedback and run issues.
 - `runs/<run-id>/06-diagnostics/qa-compass-run-diagnostics.json`: machine-readable source payload for the diagnostics report.
 - `history/runs-index.json`: run history for repeated QA cycles.

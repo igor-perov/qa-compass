@@ -19,14 +19,14 @@ Post-execution reporting:
 - `runs/<run-id>/05-reports/run-summary.json`
 - `runs/<run-id>/05-reports/qa-report.internal.html`
 - `runs/<run-id>/05-reports/qa-report.external.html`
-- optional `runs/<run-id>/05-reports/qa-report.external.pdf` client snapshot
+- `runs/<run-id>/05-reports/qa-report.external.pdf`
 
 Optional developer diagnostics:
 
 - `runs/<run-id>/06-diagnostics/qa-compass-run-diagnostics.md`
 - `runs/<run-id>/06-diagnostics/qa-compass-run-diagnostics.json`
 
-HTML remains the canonical report format. When the user needs a client-shareable attachment, export `qa-report.external.pdf` from `qa-report.external.html` as a snapshot and verify the rendered PDF before sharing it.
+HTML remains the canonical report format. Always export `qa-report.external.pdf` from `qa-report.external.html` as the client-shareable snapshot and verify the rendered PDF before sharing it.
 
 For legacy single-run outputs, these files may exist at the old root-level `04-execution` or `05-reports` paths. Migrate before adding new execution or report artifacts.
 
@@ -87,7 +87,9 @@ For each defect include:
 
 ## PDF Export
 
-Do not export internal or combined PDFs by default. For client sharing, export only the external report snapshot as `qa-report.external.pdf` when requested, and still keep `qa-report.external.html` as the canonical deliverable.
+Do not export internal or combined PDFs by default. Always export only the external report snapshot as `qa-report.external.pdf`, and still keep `qa-report.external.html` as the canonical deliverable.
+
+If PDF tooling fails, keep the HTML reports and explain the failure, but do not treat reporting as fully complete until the PDF is generated or the user explicitly accepts a development-only skip.
 
 Before sharing the PDF, verify:
 

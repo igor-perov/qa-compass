@@ -25,7 +25,7 @@ QA Compass can:
 - guide browser validation with `playwright-cli`
 - optionally export grouped Playwright `.spec.ts` starter files
 - generate internal HTML reports with evidence and artifact legends
-- generate cleaner external reports for client or stakeholder sharing
+- generate cleaner external HTML and PDF reports for client or stakeholder sharing
 - optionally collect developer-facing run diagnostics for QA Compass feedback
 - draft Jira-ready bugs from confirmed failures
 - keep reusable QA memory so future runs can continue from existing artifacts
@@ -52,7 +52,7 @@ Source materials
   -> execution subset
   -> scope preview and confirmation
   -> browser validation
-  -> internal and external reports
+  -> internal report plus external HTML/PDF reports
   -> optional Jira bug drafts
 ```
 
@@ -145,7 +145,7 @@ Common artifacts include:
 - `qa-compass-run-diagnostics.json`: machine-readable diagnostics source payload
 - `qa-report.internal.html`: detailed team-facing report
 - `qa-report.external.html`: stakeholder-facing report
-- `qa-report.external.pdf`: optional client snapshot exported from the external HTML report
+- `qa-report.external.pdf`: required client snapshot exported from the external HTML report
 - `jira-bug-drafts.json`: structured defect drafts
 - `jira-bug-drafts.md`: readable defect drafts for review
 - `playwright-specs/`: optional starter `.spec.ts` files grouped by scope
@@ -164,7 +164,7 @@ QA Compass produces one pre-execution review and two post-execution report style
 - **Internal report**: detailed QA report for the delivery team, including roles, passed cases, case-level evidence, executed steps, defects, blockers, and generated artifact links.
 - **External report**: cleaner executive-style report for clients and stakeholders, focused on scope, status, key metrics, confirmed defects, and blockers.
 
-HTML reports are the canonical output because they render most predictably. For client sharing, QA Compass can also export a verified PDF snapshot from the external HTML report.
+HTML reports are the canonical output because they render most predictably. QA Compass also exports a verified PDF snapshot from the external HTML report as a required client-shareable artifact.
 
 ## Run Diagnostics
 
@@ -224,7 +224,7 @@ playwright-cli --help
 playwright-cli install --skills
 ```
 
-The packaged PDF export helper exports the external report snapshot and supports an `npx` fallback when a global `playwright-cli` is not installed.
+The packaged report flow exports the external PDF snapshot and supports an `npx` fallback when a global `playwright-cli` is not installed.
 
 ## Install
 
@@ -337,10 +337,10 @@ Run the packaged test suite and build sample artifacts:
 python3 scripts/smoke_validate.py
 ```
 
-Optional experimental PDF export check:
+In constrained local environments, skip the mandatory PDF snapshot only for development troubleshooting:
 
 ```bash
-python3 scripts/smoke_validate.py --with-pdf
+python3 scripts/smoke_validate.py --skip-pdf
 ```
 
 Run the skill test suite directly:

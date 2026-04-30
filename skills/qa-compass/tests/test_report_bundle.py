@@ -1,8 +1,10 @@
+import io
 import json
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 SCRIPTS_DIR = Path(__file__).resolve().parents[1] / "scripts"
@@ -107,6 +109,40 @@ class ReportBundleTests(unittest.TestCase):
             self.assertIn("@media (max-width: 760px)", external_html)
             self.assertIn("grid-template-columns: repeat(2, minmax(0, 1fr))", external_html)
             self.assertNotIn("Passed Cases", external_html)
+
+    def test_cli_exports_external_pdf_by_default_and_lists_it_in_internal_legend(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir) / "report"
+            calls = []
+
+            def fake_export(html_path, pdf_path, landscape=False):
+                calls.append((Path(html_path).name, Path(pdf_path).name, landscape))
+                Path(pdf_path).write_bytes(b"%PDF-1.4 fake")
+                return Path(pdf_path)
+
+            with (
+                patch.object(
+                    sys,
+                    "argv",
+                    [
+                        "build_report_bundle.py",
+                        "--input",
+                        str(self.FIXTURES_DIR / "sample_execution_results.json"),
+                        "--output-dir",
+                        str(output_dir),
+                    ],
+                ),
+                patch.object(build_report_bundle, "export_report_pdf", side_effect=fake_export, create=True),
+                patch.object(sys, "stdout", io.StringIO()),
+            ):
+                build_report_bundle.main()
+
+            self.assertEqual(calls, [("qa-report.external.html", "qa-report.external.pdf", True)])
+            self.assertTrue((output_dir / "qa-report.external.pdf").exists())
+
+            internal_html = (output_dir / "qa-report.internal.html").read_text(encoding="utf-8")
+            self.assertIn('href="qa-report.external.pdf"', internal_html)
+            self.assertIn("Required client-shareable PDF snapshot", internal_html)
 
     def test_report_bundle_lists_passed_cases_even_without_evidence(self):
         with tempfile.TemporaryDirectory() as tmpdir:

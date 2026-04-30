@@ -19,9 +19,9 @@ def parse_args() -> argparse.Namespace:
         description="Run a lightweight validation pass for the shareable requirements QA orchestrator repo."
     )
     parser.add_argument(
-        "--with-pdf",
+        "--skip-pdf",
         action="store_true",
-        help="Also export the sample external HTML report to qa-report.external.pdf with playwright-cli or npx.",
+        help="Skip the mandatory external PDF snapshot in constrained development environments.",
     )
     return parser.parse_args()
 
@@ -91,6 +91,7 @@ def main() -> None:
                 "--output-dir",
                 str(report_dir),
             ]
+            + (["--skip-pdf"] if args.skip_pdf else [])
         )
 
         run(
@@ -156,6 +157,7 @@ def main() -> None:
                 "--output-dir",
                 str(workspace_report_dir),
             ]
+            + (["--skip-pdf"] if args.skip_pdf else [])
         )
 
         run(
@@ -209,18 +211,6 @@ def main() -> None:
             ]
         )
 
-        if args.with_pdf:
-            run(
-                [
-                    sys.executable,
-                    str(FLAGSHIP_ROOT / "scripts" / "export_report_pdf.py"),
-                    "--html",
-                    str(report_dir / "qa-report.external.html"),
-                    "--pdf",
-                    str(report_dir / "qa-report.external.pdf"),
-                    "--landscape",
-                ]
-            )
         print(f"Smoke validation artifacts: {report_dir}")
         print(f"Generated scope preview: {preview_dir}")
         print(f"Generated starter specs: {spec_dir}")
